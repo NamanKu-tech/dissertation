@@ -1,0 +1,32 @@
+# FedLAW validation config — MNIST, mlp3_mnist, full participation, no attack.
+dataset: mnist
+data_folder: ./data
+nb_honest: 20
+dist_name: dirichlet_niid
+dist_param: 5.0        # mild non-IID; α=0.5 is too heterogeneous for gradient
+                       # signal to reliably beat loss-term noise at mini-batch size
+batch_size: 64
+
+model_name: mlp3_mnist
+nb_labels: 10
+loss_name: NLLLoss
+
+# α=0.5: step large enough so cross term (≈0.1–0.3/client) >> loss noise (≈0.1).
+# Paper's α=0.01 assumes ~50× larger gradient norms (normalized or multi-step).
+# β kept small so loss term is secondary to the gradient alignment signal.
+alpha: 0.5
+beta: 0.001
+
+sparsity: 20   # all clients (no byz)
+cap: 0.0       # auto → 1/sparsity = 0.05
+
+nb_rounds: 100
+eval_every: 10
+
+nb_byz: 0
+attack_name: SignFlipping
+attack_params: {}
+
+device: cpu
+seed: 0
+results_dir: ./results/fedlaw_clean

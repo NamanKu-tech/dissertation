@@ -1,0 +1,26 @@
+dataset: mnist
+data_folder: ./data
+nb_honest: 18          # 18 honest + 2 byz = 20 total (10% Byzantine)
+dist_name: dirichlet_niid
+dist_param: 5.0
+batch_size: 64
+
+model_name: mlp3_mnist
+nb_labels: 10
+loss_name: NLLLoss
+
+alpha: 0.5
+beta: 0.001
+sparsity: 18           # s = n_total − n_byz = 18
+cap: 0.0               # auto → 1/18 ≈ 0.0556
+
+nb_rounds: 100
+eval_every: 10
+
+nb_byz: 2
+attack_name: SignFlipping
+attack_params: {}
+
+device: cpu
+seed: 0
+results_dir: ./results/fedlaw_signflipping
