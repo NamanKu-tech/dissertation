@@ -1,0 +1,58 @@
+{
+    "benchmark_config": {
+        "training_algorithm": {
+            "name": "FedAvg",
+            "parameters": {
+                "proportion_selected_clients": 1.0,
+                "local_steps_per_client": 5
+            }
+        },
+        "nb_steps": 100,
+        "device": "cpu",
+        "training_seed": 0,
+        "nb_training_seeds": 1,
+        "nb_honest_clients": 20,
+        "f": [2],
+        "tolerated_f": 2,
+        "size_train_set": 1.0,
+        "data_distribution_seed": 0,
+        "nb_data_distribution_seeds": 1,
+        "data_distribution": [
+            {
+                "name": "dirichlet_niid",
+                "distribution_parameter": [0.5]
+            }
+        ]
+    },
+    "model": {
+        "name": "cnn_mnist",
+        "dataset_name": "mnist",
+        "nb_labels": 10,
+        "loss": "NLLLoss",
+        "learning_rate": 0.1,
+        "learning_rate_decay": 1.0,
+        "milestones": []
+    },
+    "aggregator": [
+        {"name": "TrMean", "parameters": {}},
+        {"name": "Krum",   "parameters": {}}
+    ],
+    "pre_aggregators": [],
+    "honest_clients": {
+        "momentum": 0.9,
+        "weight_decay": 0.0001,
+        "batch_size": 25
+    },
+    "attack": [
+        {"name": "SignFlipping", "parameters": {}}
+    ],
+    "evaluation_and_results": {
+        "evaluation_delta": 20,
+        "batch_size_evaluation": 128,
+        "evaluate_on_test": true,
+        "store_per_client_metrics": true,
+        "store_models": false,
+        "data_folder": "./data",
+        "results_directory": "./results/baseline_mnist"
+    }
+}
