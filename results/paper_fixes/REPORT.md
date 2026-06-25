@@ -17,49 +17,34 @@ This report records expected vs. observed behaviour for each fix.
 ---
 
 ────────────────────────────────────────────────────────────────────────
-## Gap 3 — Cap t: restoring adaptive honest weighting
+## All fixes applied — paper-comparable validation
 
-### Audit: current cap vs paper cap
+All three gaps fixed: pseudo-gradients (E=3), clipping (C=max honest norm),
+cap t=1/(s−10). Config: n=18+2, Dirichlet α=0.5, 30 rounds, 3 seeds.
+Attacks: SignFlipping, InnerProductManipulation (τ=2).
 
-Current code:  t = 1/s  (cap_slack=0)
-  With s=18, t=1/18: s·t = 1.0 (exact-exclusion, single feasible point)
-  All 18 surviving clients have identical weight 1/18. No adaptive weighting.
+Note: paper Table 3 reports results at q (Dirichlet) ∈ {0.5, 0.6, 0.9}.
+We test at q=0.5 (our standard) as a reference point.
+Full 100-round 3-seed paper-identical runs require ~2-4h on CPU.
 
-Paper Table 1: t = 1/(s−10)
-  For our n=20, f=2, s=18: t = 1/(18−10) = 1/8 = 0.125
-  s·t = 18/8 = 2.25 ≥ 1 ✓ (feasible)
-  Now honest clients CAN have different weights (up to 1/8 each).
-  The 18 selected clients share weight 1 with each capped at 1/8.
-  Higher-cross_w honest clients get more weight — matching Figure 1.
+### Attack: SignFlipping
+  seed=0: acc=94.16%  byz_zeroed=1  false_excl=24
+  seed=1: acc=94.31%  byz_zeroed=1  false_excl=28
+  seed=2: acc=94.16%  byz_zeroed=1  false_excl=27
+  Mean±std: 94.21 ± 0.07%
+  Byzantine zeroed ≤ round 2 (all seeds): True
+  Zero false exclusions (all seeds):      False
 
-  s=18, slack=0: t=0.0556, s·t=1.0000  ✓
-  s=18, slack=2: t=0.0625, s·t=1.1250  ✓
-  s=18, slack=10: t=0.1250, s·t=2.2500  ✓
-  s=12, slack=0: t=0.0833, s·t=1.0000  ✓
-  s=12, slack=2: t=0.1000, s·t=1.2000  ✓
-  s=12, slack=10: t=0.5000, s·t=6.0000  ✓
+### Attack: IPM (τ=2)
+  seed=0: acc=94.14%  byz_zeroed=1  false_excl=23
+  seed=1: acc=94.33%  byz_zeroed=1  false_excl=28
+  seed=2: acc=94.16%  byz_zeroed=1  false_excl=25
+  Mean±std: 94.21 ± 0.09%
+  Byzantine zeroed ≤ round 2 (all seeds): True
+  Zero false exclusions (all seeds):      False
 
-### Experiment 3a — exact exclusion t=1/s (pre-fix)
-Config: n=18+2, Dirichlet α=0.5, SignFlipping, 30 rounds, seed=0
-Gaps applied: Gap 1 (pseudo-grad) + Gap 2 (clipping)
 
-Byzantine zeroed at: 1
-False exclusions: 0
-Honest weight std at round 30: 0.000000
-  (expected ≈ 0.000 — exact exclusion forces uniform 1/18=0.0556)
-Accuracy at round 30: 93.96%
+────────────────────────────────────────────────────────────────────────
+## End of paper fixes validation
 
-### Experiment 3b — paper cap t=1/(s−10) (Gap 3 fix)
-Config: same as 3a but cap_slack=10 → t=1/8=0.125
-
-Resolved cap: t=0.1250, s·t=2.2500
-
-Byzantine zeroed at: 1
-False exclusions: 24
-Honest weight std at round 30: 0.035736
-  honest weight min=0.0000, max=0.1146
-  (cap=1/8=0.1250; non-uniform if std > 0 and max ≈ cap)
-Accuracy at round 30: 94.16%
-
-**VERDICT Gap 3: PASS** — non-uniform honest weights (matching Figure 1)
-  while Byzantine clients remain excluded.
+Full report: ./results/paper_fixes/REPORT.md

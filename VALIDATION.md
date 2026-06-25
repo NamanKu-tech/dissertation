@@ -30,13 +30,14 @@ Full diagnostic in `results/paper_fixes/REPORT.md`.
 ## Results (v3, 30 rounds, all fixes applied)
 
 | Attack | Seeds | Acc at round 30 | Byz zeroed | Notes |
-|---|---|---|---|---|
-| SignFlipping | {0,1,2} | **92.0 ± 0.1%** | **round 1** | 0 false exclusions |
-| IPM (τ=2) | {0,1,2} | **92.0 ± 0.1%** | **round 1** | 0 false exclusions |
-| ALIE (τ=1.5) | {0} | 93.4% | never | 15/15 false excl. (clipping: same) |
+| --- | --- | --- | --- | --- |
+| SignFlipping | {0,1,2} | **94.21 ± 0.07%** | **round 1** | false excl. = adaptive weighting (expected) |
+| IPM (τ=2) | {0,1,2} | **94.21 ± 0.09%** | **round 1** | false excl. = adaptive weighting (expected) |
+| ALIE (τ=1.5) | {0} | 93.4% | never | 15/15 false excl.; clipping: identical |
 
-*Note: 30-round numbers are diagnostics. Full 100-round runs with v3 config estimated
-at ~2–4h on CPU and are deferred.*
+Notes: (1) "false excl." with t=1/(s−10) are low-h honest clients zeroed by adaptive weighting,
+not a detection failure. Byzantine weights are 0 throughout. (2) 30-round numbers are
+diagnostic. Full 100-round 3-seed runs estimated ~2–4h on CPU and are deferred.
 
 ## Reproduced behaviours (v3)
 
