@@ -4,10 +4,8 @@ Master's thesis codebase. Builds on the **ByzFL** library (EPFL/INRIA) for
 robust aggregators, attacks, non-IID partitioning, and an FL benchmark; adds
 two custom aggregators on top:
 
-- **FedLAW** — Learnable Aggregation Weights (Wang et al., arXiv 2511.03529)
-- **RA-LAW** — Reputation-Augmented LAW (this thesis' contribution)
-
-Both are **stubbed** in this commit; the next milestone implements them.
+- **FedLAW** — Learnable Aggregation Weights (Wang et al., arXiv 2511.03529) — **implemented and validated**
+- **RA-LAW** — Reputation-Augmented LAW (this thesis' contribution) — *upcoming*
 
 ## Setup
 
@@ -24,12 +22,30 @@ new for the `torch` wheels we need.)
 
 ```
 configs/
-  baseline_mnist.json     # ByzFL benchmark config (Week-1 smoke run)
-  loop_mnist.yaml         # custom loop config (Step 2, next)
+  baseline_mnist.json         # ByzFL benchmark config (smoke run)
+  baseline_mnist_clean.json   # clean baseline (no attack)
+  loop_mnist.yaml             # custom loop — FedAvg clean consistency check
+  fedlaw_mnist.yaml           # FedLAW — no attack
+  fedlaw_signflipping.yaml    # FedLAW — SignFlipping attack
+  fedlaw_ipm.yaml             # FedLAW — InnerProductManipulation attack
 src/
-  loop.py                 # custom synchronous FL round loop (Step 2)
-  aggregators.py          # Aggregator interface + FedAvg + FedLAW/RALAW stubs
-  run_loop.py             # entrypoint for the custom loop
+  models.py       # mlp3_mnist (784→200→100→10) + ByzFL injection shim
+  projections.py  # sparse unit-capped simplex projection (FedLAW Alg. 3)
+  aggregators.py  # Aggregator interface + FedAvg + ByzFLPureAggregator
+  loop.py         # custom synchronous FL round loop
+  fedlaw.py       # FedLAW two-round training loop (Algorithm 2)
+  run_loop.py     # entrypoint: python -m src.run_loop --config <yaml>
+  run_fedlaw.py   # entrypoint: python -m src.run_fedlaw --config <yaml>
+tests/
+  test_projections.py   # 17 unit tests — all passing
+docs/
+  FL_Thesis_Plan_RA-LAW.pdf
+results/
+  fedlaw_clean/           # metrics.csv, weights.npy
+  fedlaw_signflipping/
+  fedlaw_ipm/
+  plots/                  # fedlaw_accuracy.png, fedlaw_SignFlipping.png, …
+VALIDATION.md             # reproduced behaviours + discrepancies from paper
 ```
 
 ## Week-1 baseline (ByzFL benchmark)
@@ -44,29 +60,70 @@ Config: MNIST, 20 honest + 2 Byzantine (≈10%), Dirichlet α=0.5, FedAvg
 `{TrMean, Krum}` (both with `f=2`), attack `SignFlipping`, `nb_steps=100`,
 `size_train_set=1.0` (fixed hyperparameters — no inner sweep).
 
-Expectation: SignFlipping is a weak attack; TrMean and Krum should land
-accuracy-under-attack close to clean (high-90s on MNIST). That confirms the
-stack is wired correctly — not a dramatic robustness gap. The interesting
-gaps come later with IPM / Sybil.
+## Custom FL loop (Step 2)
 
-## Step 2 — custom loop (next commit)
-
-Reason: FedLAW/RA-LAW need per-client loss, stable client IDs, and
-persistent aggregator state across rounds. ByzFL's plain `__call__(vectors)`
-aggregator slot can't carry any of that, so we run our methods through a
-small custom loop that **reuses ByzFL's `DataDistributor`, `Client`,
-`ByzantineClient`, and attack classes** verbatim.
-
-`src/aggregators.py` defines:
-
-```python
-class Aggregator:
-    def aggregate(self, updates, losses, client_ids, global_state) -> np.ndarray: ...
-
-class FedAvg(Aggregator):  # implemented; sample/loss-uniform weighting
-class FedLAW(Aggregator):  # STUB — alternating-min weight step from 2511.03529
-class RALAW(FedLAW):       # STUB — decayed per-client reputation memory
+```bash
+.venv/bin/python -m src.run_loop --config configs/loop_mnist.yaml
 ```
+
+Reason: FedLAW/RA-LAW need per-client losses, stable client IDs, and
+persistent aggregator state across rounds — none of which ByzFL's plain
+`__call__(vectors)` aggregator slot supports. The custom loop **reuses ByzFL's
+`DataDistributor`, `Client`, `ByzantineClient`, and attack classes** verbatim.
+
+## FedLAW
+
+```bash
+.venv/bin/python -m src.run_fedlaw --config configs/fedlaw_mnist.yaml
+.venv/bin/python -m src.run_fedlaw --config configs/fedlaw_signflipping.yaml
+.venv/bin/python -m src.run_fedlaw --config configs/fedlaw_ipm.yaml
+
+.venv/bin/python -m src.plot_fedlaw   # writes results/plots/
+```
+
+### Two-round communication structure
+
+Each FedLAW round uses **two model broadcasts**, not one:
+
+1. **Round A** — broadcast `θ_k`; each client returns gradient `g_i(θ_k)` and
+   loss `f_i(θ_k)`. Stack into matrix `G_k` (shape `n × d`) and vector `f_k`.
+2. Compute the **test point** `θ̃ = θ_k − α · G_k · w_k`.
+3. **Round B** — broadcast `θ̃`; clients return `G̃` and `f̃` at the test point.
+4. **Weight update** — `h = w + α·β · G_kᵀ G̃ w − β · f̃`; then project `h`
+   onto the sparse capped simplex `Δ(s, t)`.
+5. **Model update** — `θ_{k+1} = θ_k − α · G_k · w_{k+1}`.
+
+The cross term `G_kᵀ G̃ w` measures gradient alignment: Byzantine gradients
+are anti-aligned with the consensus direction → negative cross-product → weight
+decrease → projection to zero. Honest gradients stay aligned → weight survives.
+
+### Loss-at-current-model
+
+`Client.compute_gradients()` is called **before** `compute_model_update()`.
+This captures `f_i(θ_k)` — the loss at the global model, not after a local SGD
+step. The paper's weight update requires this; calling in the other order gives
+`f_i(θ_k − α·g_i)` (post-step loss), which does not correspond to Algorithm 2.
+
+Byzantine clients have no ground-truth loss; the server imputes `mean(f_honest)`
+for them, which keeps the loss term from artificially highlighting any honest
+client as an outlier.
+
+### Projection function
+
+`project_sparse_capped_simplex(h, s, t)` (`src/projections.py`) projects onto
+
+```text
+Δ(s, t) = { w ≥ 0, Σwᵢ = 1, wᵢ ≤ t, ‖w‖₀ ≤ s }
+```
+
+Implementation: (1) select the `s` largest components of `h`; (2) project the
+`s`-dimensional sub-vector onto the capped simplex via bisection on the
+Lagrange multiplier `λ` (`w_i = clip(h_i − λ, 0, t)`, solve `Σw_i = 1`);
+(3) embed back. Feasibility requires `s · t ≥ 1`. For `t=0` the cap is
+auto-set to `1/s` (uniform bound). All 17 unit tests pass.
+
+See `VALIDATION.md` for reproduced behaviours and hyperparameter discrepancies
+relative to the paper.
 
 ## Reproducibility
 
