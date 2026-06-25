@@ -1,0 +1,33 @@
+# Custom-loop config: matches configs/baseline_mnist.json for direct
+# comparability against the ByzFL benchmark's FedAvg path.
+dataset: mnist
+data_folder: ./data
+nb_honest: 20
+distribution_name: dirichlet_niid
+distribution_parameter: 0.5
+batch_size: 25
+
+model_name: cnn_mnist
+nb_labels: 10
+loss_name: NLLLoss
+learning_rate: 0.1
+momentum: 0.9
+weight_decay: 0.0001
+learning_rate_decay: 1.0
+milestones: []
+
+nb_steps: 100
+local_steps_per_client: 5
+eval_every: 20
+
+# No attack — this YAML is for the FedAvg-vs-ByzFL-FedAvg consistency check.
+nb_byz: 0
+attack_name: SignFlipping
+attack_params: {}
+
+device: cpu
+seed: 0
+results_dir: ./results/loop_fedavg_clean
+
+aggregator_name: FedAvg
+aggregator_params: {}

@@ -36,3 +36,4 @@ logs/
 
 # Dissertation build artefacts (independent track)
 docs/build/
+config.json
