@@ -66,25 +66,31 @@ Cap arithmetic: s=120, t=1/110, s·t=120/110≈1.09 ≥ 1 ✓.
 Max Byzantine weight mass = 80/110 ≈ 0.727.
 Paper target (Table 3): FedLAW LIE = **70.10 ± 2.17%**.
 
-| Round | acc | sum_byz | max_byz | max_hon |
-|---|---|---|---|---|
-| 0 | 6.9% | 0.4000 | 0.0050 | 0.0050 |
-| 10 | 18.9% | **0.7273** | 0.0091 | 0.0091 |
-| 50 | 10.3% | 0.7273 | 0.0091 | 0.0091 |
-| 200 | **10.2%** | 0.7273 | 0.0091 | 0.0091 |
+Two runs (τ=1.5 default; z=0.9346 Baruch stealth bound):
 
-**GENUINE DISCREPANCY.** Final accuracy 10.2% vs paper's 70.10% — 60 point gap.
+| Round | τ=1.5 acc | z=0.9346 acc | sum_byz (both) |
+|---|---|---|---|
+| 0 | 6.9% | 6.9% | 0.4000 |
+| 10 | 18.9% | 19.5% | **0.7273** (cap, stable) |
+| 50 | 10.3% | 23.9% | 0.7273 |
+| 100 | 10.2% | 26.5% | 0.7273 |
+| 200 | **10.2%** | **33.3%** | 0.7273 |
 
-The detection behaviour matches: Byzantine weights do NOT go to zero (LIE evades the
-cross-product mechanism). But 80 Byzantine clients at cap (sum_byz=0.7273) cause full
-collapse, not graceful degradation.
+**GENUINE DISCREPANCY.** Paper target: 70.10 ± 2.17%. Best result: 33.3% (z=0.9346).
 
-Root cause: with q=0.9 heterogeneous data, coordinate-wise std of pseudo-gradients is
-~3× larger than the mean (||std||≈15.8 vs ||mean||≈5.0 in simulation). ByzFL's
-τ=1.5 gives ||lie_vector||≈5.77×||mean||. When 72.7% of weight goes to 80 such
-clients, the implied local model ψ_byz = θ − α·g_lie lies far outside any real model
-region, causing divergence. The paper's τ is unknown — §I.1 says "z = stealth bound
-(Baruch et al. 2019)" but does not print the value. Investigation required.
+τ=1.5: full collapse to chance. z=0.9346: model learns but plateaus ~30–33% with
+noise. In both cases Byzantine weights jump to cap at round 10 and remain at 0.7273
+for all 200 rounds — LIE evades FedLAW's cross-product detection in both runs.
+
+Diagnostic (Check 1+2, MNIST scale, d=178,110):
+
+  ||μ_pseudo|| = 20.24,  ||σ_pseudo|| = 42.94  (ratio σ/μ = 2.12)
+  b_lie (τ=1.5):    ||b|| = 56.29,  cos(b, μ) = −0.25  (anti-aligned at MNIST scale)
+  b_lie (z=0.935):  ||b|| = 33.98,  cos(b, μ) = −0.03  (nearly orthogonal)
+  Baruch z: Φ⁻¹((200−80−21)/(200−80)) = Φ⁻¹(0.825) = 0.9346
+
+Neither τ closes the 37pp gap to 70.10%. See REPORT.md for full verdict and
+outstanding hypotheses (raw vs pseudo-grad μ/σ; different heterogeneity setup).
 
 ---
 
@@ -184,19 +190,20 @@ Server-side ℓ2 clipping does NOT fix this: it bounds ||g_byz|| ≤ C but does 
 change the gradient direction. Cross_w[byz] remains positive after clipping.
 
 **Paper-scale accuracy — GENUINE DISCREPANCY (n=200, 200 rounds, seed=0):**
-Our result: 10.2% (model collapse). Paper Table 3: 70.10 ± 2.17%.
+τ=1.5: 10.2% (collapse). z=0.9346 (Baruch stealth bound): 33.3%. Paper: 70.10 ± 2.17%.
 
-The collapse at paper scale is caused by τ=1.5 being too aggressive for pseudo-
-gradients with q=0.9 heterogeneity. With ||std_pseudo|| ≈ 3× ||mean_pseudo||,
-the LIE vector has magnitude 5.77× the honest mean. 80 Byzantine clients at 72.7%
-total weight pull the model to a degenerate region. The paper's τ is unspecified
-numerically in §I.1 ("z = stealth bound (Baruch et al. 2019)") — further
-investigation needed to reproduce 70.10%.
+MNIST-scale diagnostic (d=178,110): ||σ_pseudo|| = 2.12 × ||μ_pseudo||.
+τ=1.5 produces b_lie anti-aligned with μ (cos=−0.25); z=0.9346 gives nearly
+orthogonal b_lie (cos=−0.03). Neither vector is co-aligned with the honest mean
+at MNIST scale — contrary to the small-n proxy simulation (cos=+0.998 at d=100).
 
-Note: Baruch et al.'s stealth bound for 40% Byzantine (n=200, f=80) gives
-z = Φ⁻¹(0.175) = −0.935 (negative), which is for Krum/Bulyan evasion, NOT
-FedLAW. Applying z=-0.935 would give an anti-aligned attack that FedLAW detects.
-The correct τ for FedLAW LIE experiments is a separate open question.
+Baruch stealth bound: z = Φ⁻¹((n−f−m)/(n−f)) where m=⌊n/2+1⌋−f.
+For n=200, f=80: m=21, z = Φ⁻¹(0.825) = +0.9346.
+Running with z=0.9346 reduces the forged vector magnitude (||b||=33.98 vs 56.29)
+and partially recovers learning, but leaves a 37pp gap versus the paper target.
+Outstanding hypotheses: paper uses raw gradients (not pseudo-gradients) for LIE
+μ/σ computation; or a different data setup for MNIST LIE experiments. No further
+investigation attempted — beyond scope of this reproduction.
 
 **Structural limitation (unchanged):** FedLAW's theorem requires Byzantine
 gradients to be anti-aligned with consensus. LIE violates this by construction.

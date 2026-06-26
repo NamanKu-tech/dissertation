@@ -145,6 +145,69 @@ Outstanding question for viva:
   Investigation needed before claiming LIE reproduction.
 
 ────────────────────────────────────────────────────────────────────────
+## LIE Check 1 + Check 2 diagnostics (2026-06-26)
+
+### Check 1 — what does LIE compute μ/σ over?
+
+Object: honest pseudo-gradients g_i = (θ − ψ_i)/α  (correct — no wiring bug)
+Measured at round 0, MNIST scale (d = 178,110), n=200, f=80, q=0.9:
+
+  ||μ_pseudo||    = 20.24
+  ||σ_pseudo||    = 42.94    (ratio σ/μ = 2.12)
+
+  b_lie (τ=1.5):  ||b|| = 56.29   cos(b, μ) = −0.2502   (ANTI-aligned)
+  b_lie (z=0.935): ||b|| = 33.98   cos(b, μ) = −0.0337   (nearly orthogonal)
+
+  Honest client norms: mean = 47.20,  std = 3.25
+
+Key finding: at MNIST scale with pseudo-gradients and q=0.9, the LIE vector is
+NOT co-aligned with the honest mean for either τ value. The earlier proxy
+simulation (d=100) gave cos=+0.998 — this was a dimensionality artefact.
+
+### Check 2 — Baruch et al. stealth bound
+
+n=200, f=80:
+  m = ⌊200/2 + 1⌋ − 80 = 21
+  z = Φ⁻¹((200 − 80 − 21) / (200 − 80)) = Φ⁻¹(0.8250) = 0.9346
+
+LIE rerun with τ = z = 0.9346 (n=200, q=0.9, frac_mal=0.4, seed=0, T=200):
+
+  round   0: acc=0.0686  sum_byz=0.4000
+  round  10: acc=0.1950  sum_byz=0.7273  (cap reached, stable thereafter)
+  round  50: acc=0.2391  sum_byz=0.7273
+  round 100: acc=0.2650  sum_byz=0.7273
+  round 150: acc=0.2955  sum_byz=0.7273
+  round 200: acc=0.3328  [FINAL]
+
+  Final accuracy: 33.3%   (τ=1.5 gave 10.2%;  paper target: 70.10 ± 2.17%)
+
+### Verdict
+
+τ=1.5 → collapse (10.2%): LIE vector anti-aligned, Byzantine mass = 72.7%,
+  weighted update pulled to incoherent region.
+
+z=0.9346 → partial learning (33.3%): model is NOT collapsed, Byzantine weights
+  stable at cap, but accuracy plateaus ~30-33% with high noise. Still 37pp
+  below paper target.
+
+LIE evasion of FedLAW's cross-product detector: CONFIRMED in both runs.
+  Byzantine weights jump to cap at round 10 and remain at 0.7273 for all 200
+  rounds — FedLAW never zeros them.
+
+Reproduction status:
+  Behaviour (LIE evades detection):        REPRODUCED
+  Paper accuracy (70.10 ± 2.17%):          NOT REPRODUCED (best: 33.3% with z)
+
+Outstanding question: the 37pp residual gap with z=0.9346 is unexplained. The
+paper's appendix §I.1 states "z = stealth bound (Baruch et al. 2019)" without
+printing τ numerically. Possible explanations not yet ruled out:
+  (a) Paper uses raw gradients, not pseudo-gradients, for LIE μ/σ computation.
+  (b) Paper uses a different heterogeneity setup for MNIST LIE experiments.
+  (c) Paper reports a different seed / more rounds than T=200.
+Investigation would require the paper's source code or correspondence with
+authors — beyond the scope of this dissertation reproduction.
+
+────────────────────────────────────────────────────────────────────────
 ## End of paper fixes validation
 
 Full report: ./results/paper_fixes/REPORT.md
