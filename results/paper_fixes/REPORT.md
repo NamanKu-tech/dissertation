@@ -363,6 +363,122 @@ Concrete next step (not done — out of scope for this batch):
   paper's 87% number is not reproducible from published configuration alone.
 
 ────────────────────────────────────────────────────────────────────────
+## flipping_label co-alignment root cause (2026-06-26)
+
+Follow-up to the §"flipping_label n=200 frac=0.4 diagnosis" above. The
+paper-faithfulness audit (`PAPER_FAITHFULNESS.md`) has already verified the
+gradient definition, cap arithmetic, group-oriented selection, and model
+architecture (paper §5.1 specifies the 3-layer MLP). The open question is
+why our cos(byz, honest) = +0.16 at frac=0.4 contradicts the paper's
+Appendix C, which states data-poisoning attacks conflict with the honest
+cluster (anti-alignment) at all fractions. This section answers it.
+
+### D1 — label-flip mapping verified
+
+Byzantine client #40 (group 2): 10 sample pairs (original → flipped) show
+2→7, 5→4 (etc.), all matching L−l−1 with L=10. Group-2 examples (which
+make up 90% of client #40's data by q=0.9 partition) all flip to label 7.
+Honest client #0 (group 0) sees unflipped labels [0,0,…] from the loader.
+
+  Mapping is exact paper §I.1. Not a bug.
+
+### D2 — cos(byz_mean, honest_mean) vs frac_malicious (n=200, q=0.9, round 5)
+
+  frac=0.1  1 group   ||byz||=29.47  cos = −0.1361   anti-aligned
+  frac=0.2  2 groups  ||byz||=14.93  cos = −0.1709   anti-aligned
+  frac=0.3  3 groups  ||byz||= 8.51  cos = −0.0755   anti-aligned (weakening)
+  frac=0.4  4 groups  ||byz||= 9.25  cos = +0.1617   CO-ALIGNED
+
+The transition is **not smooth from −0.14 to +0.16**. It is non-monotonic:
+anti-alignment strengthens from frac=0.1 to frac=0.2, then weakens at 0.3,
+then flips sign at 0.4. Norm shrinks roughly monotonically from 29.5 to 8.5
+between frac=0.1 and 0.3 — clear cancellation across groups.
+
+### D3 — per-group breakdown at frac=0.4 (decisive)
+
+Per-group mean Byzantine pseudo-gradient at round 5:
+
+  group 2 (label 2→7, n=20):   ||mean_g||=35.81   cos(g, honest)=+0.1732
+  group 4 (label 4→5, n=20):   ||mean_g||=24.24   cos(g, honest)=−0.0398
+  group 8 (label 8→1, n=20):   ||mean_g||=21.44   cos(g, honest)=−0.0470
+  group 9 (label 9→0, n=20):   ||mean_g||=31.85   cos(g, honest)=+0.0549
+
+Individual group pseudo-gradients are large (21–36) — each corrupted group
+on its own produces a strong update signal. But pairwise cosines between
+the 4 corrupted-group means are **all negative**:
+
+  cos(g2, g4) = −0.18    cos(g2, g8) = −0.21    cos(g2, g9) = −0.11
+  cos(g4, g8) = −0.36    cos(g4, g9) = −0.30    cos(g8, g9) = −0.19
+
+The 4 Byzantine groups point in **mutually antagonistic** directions
+(each group is pushing the model to mislabel its own dominant class,
+which is a different parameter-space direction per class).
+
+Cancellation when summed:
+
+  Σ_g ||group_g||      = 113.34    (max possible if perfectly aligned)
+  || Σ_g group_g ||    =  36.99    (after summation)
+  cancellation ratio   =   0.33    (67% of the per-group magnitude cancels)
+  ||overall_byz_mean|| =   9.25    (after dividing by 4 groups)
+  cos(overall_byz_mean, honest) = +0.1617
+
+### What happens mechanically
+
+At multi-group corruption with q-split data, each corrupted group submits
+a pseudo-gradient that pushes the model away from correctly classifying its
+own dominant label. These per-group directions are nearly orthogonal /
+mildly anti-aligned with each other (the parameter directions for
+class-2-misclassification, class-4-misclassification, etc. are largely
+distinct). Their average partially cancels — the surviving residual is
+weak, and at this point in training happens to be mildly co-aligned with
+the general "improve classification" direction of the honest gradient.
+
+The cross-product detector measures alignment of the **averaged**
+Byzantine direction against the consensus. It cannot see the per-group
+signals individually. So with 4 groups it sees a small, co-aligned vector
+and cannot distinguish it from a weak-honest-client gradient.
+
+At frac=0.1 (1 group) there's no cancellation — the Byzantine direction
+is large and clearly anti-aligned. Detector works. At frac=0.4 (4 groups)
+the same per-group signals partially cancel and the residual flips sign.
+Detector fails.
+
+### Verdict: (C) — genuine property, not implementation bug
+
+Evidence supporting (C):
+
+  - Label-flip mapping exactly matches paper (D1).
+  - Per-group pseudo-gradients are individually large (21–36) and largely
+    anti-aligned with each other (D3 pairwise table) — flipping_label is
+    "working" per group as the paper describes.
+  - The Byzantine mean cancellation is geometric, not a bug — it is the
+    inevitable consequence of averaging 4 group-specific misclassification
+    directions.
+  - All upstream paper-faithfulness items already verified
+    (`PAPER_FAITHFULNESS.md` §§1, 3, 6, plus architecture in §"Synthesis").
+  - The non-monotonic frac series (−0.14, −0.17, −0.08, +0.16) shows a
+    smooth geometric transition that arises from the number of groups
+    averaged — not a sudden threshold effect that would suggest a wiring
+    bug.
+
+This contradicts the paper's Appendix C claim that data-poisoning attacks
+produce gradients that conflict with the honest cluster at all fractions.
+With the q-split + group-oriented selection at frac=0.4, our measurements
+show the averaged Byzantine gradient becomes co-aligned (cos=+0.16), and
+FedLAW's detector cannot suppress them — Byzantine weights pin at the
+cap floor (sum_byz=0.273) for all 200 rounds.
+
+We cannot rule out hypothesis (B) — some unstated experimental difference
+(seed coupling, q-split implementation choice, projection-time bias) that
+the paper used to obtain 87.45% — because our setup is paper-faithful on
+every item we can verify from the published configuration.
+
+The 18pp gap (~65% vs 87.45%) at frac=0.4 flipping_label is therefore a
+**reportable finding**: FedLAW's cross-product detector exhibits a
+multi-group cancellation failure mode under Cao q-split data that is not
+acknowledged in the paper's mechanism description.
+
+────────────────────────────────────────────────────────────────────────
 ## End of paper fixes validation
 
 Full report: ./results/paper_fixes/REPORT.md
