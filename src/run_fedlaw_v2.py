@@ -37,6 +37,8 @@ def main() -> None:
     p.add_argument("--q", type=float, default=None, help="Override q")
     p.add_argument("--frac-malicious", type=float, default=None,
                    dest="frac_malicious", help="Override frac_malicious")
+    p.add_argument("--lie-tau", type=float, default=None,
+                   dest="lie_tau", help="LIE attack tau (default 1.5; use Baruch z for theory-grounded value)")
     args = p.parse_args()
 
     overrides = {
@@ -45,6 +47,7 @@ def main() -> None:
         "n_clients": args.n_clients,
         "q": args.q,
         "frac_malicious": args.frac_malicious,
+        "lie_tau": args.lie_tau,
     }
     cfg = _load_config(args.config, overrides)
 

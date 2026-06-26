@@ -147,11 +147,14 @@ class LIEAttack:
     Wraps ByzFL's ALittleIsEnough. Takes HONEST pseudo-grads as input
     (not Byzantine ones) — pass honest_pseudo_grads in the collection loop.
     All Byzantine clients submit the same forged vector.
+
+    tau: scale factor applied to coordinate-wise std (default 1.5 = ByzFL default).
+         Use Baruch stealth bound z = Φ⁻¹((n−f−m)/(n−f)) for theory-grounded τ.
     """
 
-    def __init__(self, n_byz: int):
+    def __init__(self, n_byz: int, tau: float = 1.5):
         self.n_byz = n_byz
-        self._attack = _bzatk.ALittleIsEnough()
+        self._attack = _bzatk.ALittleIsEnough(tau=tau)
 
     def __call__(
         self,

@@ -58,6 +58,7 @@ class FedLAWV2Config:
     eval_every: int = 10
     # Attack
     attack_name: str = "flipping_label"
+    lie_tau: float = 1.5
     # Output
     seed: int = 0
     results_dir: str = "./results/v2"
@@ -176,7 +177,7 @@ def _build_gradient_attack(cfg: FedLAWV2Config, n_byz: int):
     if cfg.attack_name == "double":
         return DoubleAttack(alpha=cfg.alpha, seed=cfg.seed)
     if cfg.attack_name == "lie":
-        return LIEAttack(n_byz=n_byz)
+        return LIEAttack(n_byz=n_byz, tau=cfg.lie_tau)
     raise ValueError(f"Unknown gradient attack: {cfg.attack_name!r}")
 
 
