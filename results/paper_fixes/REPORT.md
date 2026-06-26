@@ -257,6 +257,112 @@ Remaining possibilities not investigated:
 Without the paper's source code, the gap cannot be closed from published info.
 
 ────────────────────────────────────────────────────────────────────────
+## flipping_label n=200 frac=0.4 diagnosis (2026-06-26)
+
+Context: partial paper-scale runs showed flipping_label q=0.9 f=0.4 plateauing
+at ~65% by round 200 (paper Table 3 target: 87.45%). frac=0.1 tracked the paper.
+Diagnosed before chasing the gap.
+
+### D1 — weight trajectory (per round, first 22 rounds)
+
+frac=0.4 (s=120, t=1/110, max byz mass = 80/110 = 0.727):
+
+    r   sum_byz   max_byz   max_hon  n_byz_sup  n_hon_sup
+    0    0.5073    0.0091    0.0091         62         58
+    1    0.5038    0.0091    0.0091         62         58
+    2    0.4644    0.0091    0.0091         59         61
+    3    0.3798    0.0091    0.0091         46         74
+    4    0.2975    0.0091    0.0091         40         80
+    5    0.2741    0.0091    0.0091         40         80
+    6    0.2727    0.0091    0.0091         40         80   ← cap floor reached
+   …   (stable through round 21)
+
+frac=0.1 (s=180, t=1/170, max byz mass = 20/170 = 0.118):
+
+    r   sum_byz   max_byz   max_hon  n_byz_sup  n_hon_sup
+    0    0.1176    0.0059    0.0059         20        160
+    1    0.1176    0.0059    0.0059         20        157
+    2    0.0878    0.0051    0.0059         20        159
+    3    0.0589    0.0044    0.0059         20        160
+    4    0.0588    0.0051    0.0059         19        160
+   …   sum_byz stays around 0.059, half the cap maximum
+
+At frac=0.4, sum_byz starts ABOVE its uniform initial value (0.51 vs 0.40) — the
+first projection adds weight to Byzantine clients — then settles to the cap
+floor (40 Byzantine clients pinned at cap = 0.0091, total 0.273) by round 6. Of
+the 80 Byzantine clients, ~40 are excluded but ~40 hold full cap weight forever.
+
+### D2 — selection scheme (code inspection)
+
+src/data_partition.py:select_malicious_indices implements group-oriented
+selection: rng.permutation(n_groups) then fills complete groups. For n=200,
+n_per_group=20: frac=0.4 picks 4 full groups (80 clients, here groups {2,4,8,9});
+frac=0.1 picks 1 full group (20 clients, here group 2). Matches paper §I.1.
+NOT the bug.
+
+### D3 — Byzantine vs honest gradient stats @ round 5
+
+frac=0.4:
+  ||mean honest g||      = 15.31
+  ||mean Byzantine g||   =  9.25
+  cos(byz, honest_mean)  = +0.1617    ← CO-ALIGNED (mildly) → evades detector
+
+frac=0.1:
+  ||mean honest g||      = 10.24
+  ||mean Byzantine g||   = 29.47
+  cos(byz, honest_mean)  = −0.1361    ← anti-aligned → detector works
+
+Root cause. Byzantine flipping_label clients at frac=0.4 produce pseudo-gradients
+whose mean is mildly co-aligned with the honest mean. FedLAW's cross-product
+detector relies on Byzantine anti-alignment; it cannot distinguish co-aligned
+flipping_label clients from weak honest clients. The mechanism degenerates to
+selecting clients with the strongest training signal, and 40 of the 80 Byzantine
+clients have stronger h-values than 40 of the 120 honest clients, so they enter
+the support at cap and stay there.
+
+At frac=0.1 the Byzantine clients are a single group (group 2) — their flipped
+label gradient is anti-aligned with the consensus from 9 other classes. As Byz
+fraction rises, the Byzantine mean averages across more flipped classes and
+partially cancels in the direction orthogonal to honest, leaving a small
+co-aligned residual.
+
+### D4 — cap arithmetic
+
+frac=0.4: s·t = 120/110 = 1.0909 ≥ 1 ✓. Max byz mass 0.727, honest budget 0.273.
+frac=0.1: s·t = 180/170 = 1.0588 ≥ 1 ✓. Max byz mass 0.118, honest budget 0.882.
+
+Cap is not the bottleneck — the paper achieves 87% at frac=0.4 with the same
+formula. The cap allows Byzantine to hold up to 72.7%, but only matters if the
+detector lets them reach it. The detector failure (D3) is the upstream cause.
+
+### Verdict — B (implementation gap, not random selection)
+
+Selection (D2) matches the paper. Cap arithmetic (D4) matches the paper. The
+detector demonstrably fails at frac=0.4 (D3) by leaving Byzantine clients at
++0.16 cosine alignment with honest mean. This is upstream of the cap.
+
+The paper achieving 87% with the same formula means either:
+  (i) Their model produces strongly anti-aligned pseudo-grads under flipping_label
+      with 4-group corruption (architectural difference — they likely use a CNN
+      while we use mlp3_mnist; CNN gradients have richer class-specific structure
+      that flipping_label more sharply inverts), OR
+  (ii) Their pseudo-gradient definition or local-epoch count produces sharper
+       direction divergence (we use E=3, β=0.01, momentum=0), OR
+  (iii) An undocumented difference in the projection / weight update schedule
+        prevents the Byzantine clients from holding cap weight.
+
+The frac=0.1 case works because the single-group Byzantine pseudo-grad is sharply
+anti-aligned (cos=−0.14). The frac=0.4 failure is therefore not a wholesale bug
+but a sensitivity of the detector to alignment that emerges only at multi-group
+Byzantine corruption.
+
+Concrete next step (not done — out of scope for this batch):
+  Swap mlp3_mnist for a small CNN (paper architecture for MNIST is usually a
+  2-conv CNN); rerun flipping_label q=0.9 f=0.4 and re-measure cos(byz, honest)
+  at round 5. If CNN gradients are anti-aligned, the gap closes. If not, the
+  paper's 87% number is not reproducible from published configuration alone.
+
+────────────────────────────────────────────────────────────────────────
 ## End of paper fixes validation
 
 Full report: ./results/paper_fixes/REPORT.md
