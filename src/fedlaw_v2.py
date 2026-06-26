@@ -345,9 +345,12 @@ class FedLAWV2Trainer:
                     acc, loss = self._eval()
                     writer.writerow([k, f"{acc:.6f}", f"{loss:.6f}"])
                     fh.flush()
-                    w_byz = " ".join(f"{self.w[i]:.4f}" for i in self.byz_indices)
+                    sum_byz = float(sum(self.w[i] for i in self.byz_indices))
+                    max_byz = float(max(self.w[i] for i in self.byz_indices))
+                    max_hon = float(max(self.w[i] for i in self.honest_indices))
                     print(f"[round {k:4d}] acc={acc:.4f}  loss={loss:.4f}"
-                          f"  w_byz=[{w_byz}]")
+                          f"  sum_byz={sum_byz:.4f}  max_byz={max_byz:.4f}"
+                          f"  max_hon={max_hon:.4f}")
 
                 theta_k = self._get_global_flat()
 

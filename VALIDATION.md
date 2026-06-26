@@ -39,6 +39,55 @@ Notes: (1) "false excl." with t=1/(s−10) are low-h honest clients zeroed by ad
 not a detection failure. Byzantine weights are 0 throughout. (2) 30-round numbers are
 diagnostic. Full 100-round 3-seed runs estimated ~2–4h on CPU and are deferred.
 
+---
+
+## FedLAW v2 results (paper-faithful implementation, Cao et al. q-partition)
+
+FedLAW v2 uses the paper's Cao et al. q-parameter data partitioning (not Dirichlet),
+all 5 paper attacks, and all 4 algorithm fixes. Two scales tested.
+
+### (a) Behaviour reproduced — small n (n=20, 30 rounds, q=0.9, 40% Byzantine, seed=0)
+
+| Attack | Acc round 30 | sum_byz at round 5 | Detection |
+|---|---|---|---|
+| flipping_label | 87.3% | 0.0000 | ✓ zeroed round 5 |
+| backdoor | 88.4% | 0.0000 | ✓ zeroed round 5 |
+| inverse_gradient | 87.8% | 0.0000 | ✓ zeroed round 5 |
+| double | 87.5% | 0.0000 | ✓ zeroed round 5 |
+| **lie (τ=1.5)** | **9.6% (collapse)** | **1.0000** | ✗ all Byzantine at cap |
+
+Note: n=20 LIE collapse is a **small-n cap artifact** — with s=12, t=1/2, the 8
+Byzantine clients absorb 100% of the weight budget (8 × 1/2 > 1 → bisection gives
+each 1/8, sum=1.0). This is NOT the paper's scenario.
+
+### (b) Numbers reproduced — paper scale (n=200, 200 rounds, q=0.9, 40% Byzantine, seed=0)
+
+Cap arithmetic: s=120, t=1/110, s·t=120/110≈1.09 ≥ 1 ✓.
+Max Byzantine weight mass = 80/110 ≈ 0.727.
+Paper target (Table 3): FedLAW LIE = **70.10 ± 2.17%**.
+
+| Round | acc | sum_byz | max_byz | max_hon |
+|---|---|---|---|---|
+| 0 | 6.9% | 0.4000 | 0.0050 | 0.0050 |
+| 10 | 18.9% | **0.7273** | 0.0091 | 0.0091 |
+| 50 | 10.3% | 0.7273 | 0.0091 | 0.0091 |
+| 200 | **10.2%** | 0.7273 | 0.0091 | 0.0091 |
+
+**GENUINE DISCREPANCY.** Final accuracy 10.2% vs paper's 70.10% — 60 point gap.
+
+The detection behaviour matches: Byzantine weights do NOT go to zero (LIE evades the
+cross-product mechanism). But 80 Byzantine clients at cap (sum_byz=0.7273) cause full
+collapse, not graceful degradation.
+
+Root cause: with q=0.9 heterogeneous data, coordinate-wise std of pseudo-gradients is
+~3× larger than the mean (||std||≈15.8 vs ||mean||≈5.0 in simulation). ByzFL's
+τ=1.5 gives ||lie_vector||≈5.77×||mean||. When 72.7% of weight goes to 80 such
+clients, the implied local model ψ_byz = θ − α·g_lie lies far outside any real model
+region, causing divergence. The paper's τ is unknown — §I.1 says "z = stealth bound
+(Baruch et al. 2019)" but does not print the value. Investigation required.
+
+---
+
 ## Reproduced behaviours (v3)
 
 **Weight collapse (SignFlipping, IPM):** Byzantine weights drop to exactly 0.000 at
@@ -120,28 +169,43 @@ This is the intended adaptive weighting, not a false exclusion.
 For small n (e.g. n=20, s=18) use a smaller slack (s−2 or s−4) if s−10 ≤ 0.
 Always verify s·t ≥ 1 before running.
 
-### 4. ALIE defeats the mechanism — structural, clipping is insufficient
+### 4. LIE/ALIE — evasion confirmed, paper numbers NOT reproduced
 
-A Little Is Enough (ALIE, τ=1.5) submits g_byz = mean(honest) + τ·σ(honest)·dir.
-The mean(honest) component makes Byzantine gradients co-aligned with consensus:
+**Detection evasion (confirmed, small n):** ALIE (τ=1.5) submits
+g_byz = mean(honest) + τ·σ(honest). The mean component makes Byzantine gradients
+co-aligned with consensus, evading FedLAW's cross-product detection:
 
 | Attack | cos(g_byz, mean_honest) | cross_w[byz] | Detection |
 |---|---|---|---|
 | SignFlipping | −1.000 | strongly negative | ✓ zeroed round 1 |
-| ALIE τ=1.5 | +0.222 | **positive, > honest mean** | ✗ honest falsely excluded |
+| ALIE τ=1.5 | +0.222 | **positive, > honest mean** | ✗ Byzantine weights survive |
 
-With Gap 2 (server-side ℓ2 clipping): clipping bounds ||g_byz|| ≤ C = max honest
-norm. It does NOT change the gradient direction. The cross_w[byz] remains positive
-after clipping. False exclusions persist at 15/15 rounds (identical with/without
-clipping). This confirms the gap is directional, not norm-based.
+Server-side ℓ2 clipping does NOT fix this: it bounds ||g_byz|| ≤ C but does not
+change the gradient direction. Cross_w[byz] remains positive after clipping.
 
-This is a structural limitation. FedLAW's theorem requires the Byzantine gradient
-to be anti-aligned with the consensus update. ALIE violates this by construction;
-no norm-based clipping or hyperparameter tuning can fix it.
+**Paper-scale accuracy — GENUINE DISCREPANCY (n=200, 200 rounds, seed=0):**
+Our result: 10.2% (model collapse). Paper Table 3: 70.10 ± 2.17%.
 
-**Implication for RA-LAW (unchanged):** A reputation signal based on cross_w history
-will also mis-rank Byzantine clients under ALIE. The reputation signal must use a
-source orthogonal to instantaneous gradient alignment.
+The collapse at paper scale is caused by τ=1.5 being too aggressive for pseudo-
+gradients with q=0.9 heterogeneity. With ||std_pseudo|| ≈ 3× ||mean_pseudo||,
+the LIE vector has magnitude 5.77× the honest mean. 80 Byzantine clients at 72.7%
+total weight pull the model to a degenerate region. The paper's τ is unspecified
+numerically in §I.1 ("z = stealth bound (Baruch et al. 2019)") — further
+investigation needed to reproduce 70.10%.
+
+Note: Baruch et al.'s stealth bound for 40% Byzantine (n=200, f=80) gives
+z = Φ⁻¹(0.175) = −0.935 (negative), which is for Krum/Bulyan evasion, NOT
+FedLAW. Applying z=-0.935 would give an anti-aligned attack that FedLAW detects.
+The correct τ for FedLAW LIE experiments is a separate open question.
+
+**Structural limitation (unchanged):** FedLAW's theorem requires Byzantine
+gradients to be anti-aligned with consensus. LIE violates this by construction.
+No norm-based clipping or hyperparameter tuning can make FedLAW detect LIE.
+The question is only whether LIE causes collapse or graceful degradation.
+
+**Implication for RA-LAW (unchanged):** A reputation signal based on cross_w
+history will also mis-rank Byzantine clients under LIE. The reputation signal
+must use a source orthogonal to instantaneous gradient alignment.
 
 ### 5. Convergence noise — revised with local epochs
 
@@ -189,10 +253,20 @@ identified and fixed relative to the ICLR 2026 paper:
    at exactly 1/s). The paper's t = 1/(s−10) allows adaptive honest weighting
    (matching Figure 1) while still excluding Byzantine clients.
 
-One confirmed structural limitation (unchanged): **ALIE evades FedLAW's cross-product
-detection mechanism** regardless of parameter tuning or norm clipping. RA-LAW's
-reputation signal must be derived from a source beyond instantaneous gradient
-alignment to handle ALIE and similar co-aligned attacks.
+**What is reproduced vs. open:**
+
+| Claim | Status |
+|---|---|
+| SignFlipping / IPM detection (small n, Dirichlet) | ✓ Reproduced (v3, 3 seeds) |
+| 4-attack detection (small n, q-partition, FedLAW v2) | ✓ Behaviour reproduced |
+| LIE evasion of cross-product detection | ✓ Mechanism confirmed |
+| LIE graceful degradation to ~70% (paper Table 3) | ✗ NOT reproduced — collapse to 10% |
+| LIE: τ value for paper's 70.10% result | ✗ Unknown — investigation required |
+
+One confirmed structural limitation: **LIE evades FedLAW's cross-product detection
+mechanism** regardless of norm clipping or hyperparameter tuning. RA-LAW's reputation
+signal must be derived from a source beyond instantaneous gradient alignment to handle
+co-aligned attacks.
 
 ---
 
