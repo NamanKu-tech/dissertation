@@ -208,6 +208,55 @@ Investigation would require the paper's source code or correspondence with
 authors — beyond the scope of this dissertation reproduction.
 
 ────────────────────────────────────────────────────────────────────────
+## LIE raw-gradient hypothesis test (2026-06-26)
+
+### Hypothesis (a)
+Paper computes LIE μ/σ over raw single-batch gradients ∇f(θ; batch), not
+pseudo-gradients (θ−ψ_i)/α. Raw grads should have smaller σ/μ, producing a
+co-aligned forged vector that evades FedLAW gracefully.
+
+### Setup
+LIERawGradAttack: at each round, honest clients set params to θ, run one backward
+pass (no local epochs), extract flat gradient vector. Byzantine clients submit
+b = μ_raw + z·σ_raw as their pseudo-gradient. τ = z = 0.9346. n=20, q=0.9, f=8.
+
+### Diagnostic @ round 0 (n=20 smoke run, d=178,110)
+
+  ||μ_raw||     = 0.963
+  ||σ_raw||     = 2.805
+  σ_raw/μ_raw   = 2.91      ← HIGHER than pseudo-grad ratio of 2.12, not lower
+  ||b_lie_raw|| = 2.72
+  ||μ_pseudo||  = 36.82     ← forged vector is ~14× smaller than honest pseudo-grad
+  cos(b_lie_raw, μ_pseudo) = −0.023  (orthogonal — not co-aligned)
+
+### Result
+
+Byzantine weights:  zeroed by round 5, sum_byz=0.000 for all remaining rounds.
+Final accuracy:     88.4%   (FedLAW fully recovers — attack is detected)
+
+### Verdict: hypothesis (a) is FALSE.
+
+Raw gradients do NOT have a smaller σ/μ ratio — they have a larger one (2.91 vs
+2.12 for pseudo-gradients). The forged vector b_lie_raw is both orthogonal to the
+pseudo-grad mean AND tiny in magnitude (~14× smaller than honest pseudo-grads).
+FedLAW's cross-product mechanism assigns near-zero scores to these Byzantine
+clients and zeros their weights by round 5. Raw-grad LIE is detectable.
+
+The reason pseudo-grad LIE evades detection (z=0.9346 run: sum_byz=0.727 stable)
+is that ||b_lie_pseudo|| ≈ 34 is close to the honest pseudo-grad norm (~47), so
+cross-product scores are near-zero but not sufficiently negative to zero them.
+Switching to raw grads collapses ||b|| to ~2.7, making the cross-product
+unambiguously near-zero and enabling exclusion.
+
+The 37pp accuracy gap (33.3% vs 70.10%) remains unexplained by hypothesis (a).
+Remaining possibilities not investigated:
+  (b) Different data heterogeneity setup for MNIST LIE experiments in the paper.
+  (c) Paper used more rounds or different seeds for the Table 3 number.
+  (d) The paper's LIE results reflect a bug or optimistic configuration not
+      described in the appendix.
+Without the paper's source code, the gap cannot be closed from published info.
+
+────────────────────────────────────────────────────────────────────────
 ## End of paper fixes validation
 
 Full report: ./results/paper_fixes/REPORT.md

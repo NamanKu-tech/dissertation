@@ -29,7 +29,8 @@ import src.models  # registers mlp3_mnist
 from src.data_partition import cao_partition, select_malicious_indices
 from src.attacks import (
     FlipLabelDataset, BackdoorDataset,
-    InverseGradientAttack, GlobalParamAttack, DoubleAttack, LIEAttack,
+    InverseGradientAttack, GlobalParamAttack, DoubleAttack,
+    LIEAttack, LIERawGradAttack,
 )
 from src.projections import project_sparse_capped_simplex
 
@@ -178,6 +179,8 @@ def _build_gradient_attack(cfg: FedLAWV2Config, n_byz: int):
         return DoubleAttack(alpha=cfg.alpha, seed=cfg.seed)
     if cfg.attack_name == "lie":
         return LIEAttack(n_byz=n_byz, tau=cfg.lie_tau)
+    if cfg.attack_name == "lie_raw":
+        return LIERawGradAttack(n_byz=n_byz, tau=cfg.lie_tau)
     raise ValueError(f"Unknown gradient attack: {cfg.attack_name!r}")
 
 
@@ -304,7 +307,41 @@ class FedLAWV2Trainer:
         if self.gradient_attack is not None and self.byz_grad_indices:
             byz_grads = [pseudo_grads[i] for i in self.byz_grad_indices]
 
-            if isinstance(self.gradient_attack, LIEAttack):
+            if isinstance(self.gradient_attack, LIERawGradAttack):
+                # Extra backward pass at θ on honest clients — raw ∇f(θ; batch)
+                raw_grads: list[np.ndarray] = []
+                for i in self.honest_indices:
+                    self.clients[i].set_parameters(tv)
+                    self.clients[i].compute_gradients()
+                    rg = np.concatenate([
+                        p.grad.detach().cpu().numpy().ravel()
+                        for p in self.clients[i].model.parameters()
+                    ]).astype(np.float64)
+                    raw_grads.append(rg)
+
+                replaced, mu_raw, sigma_raw, b_raw = self.gradient_attack(
+                    raw_grads, theta, round_k)
+
+                if round_k == 0:
+                    mu_pseudo = np.mean(
+                        [pseudo_grads[i] for i in self.honest_indices], axis=0)
+                    norm_mu_raw   = float(np.linalg.norm(mu_raw))
+                    norm_sig_raw  = float(np.linalg.norm(sigma_raw))
+                    norm_mu_ps    = float(np.linalg.norm(mu_pseudo))
+                    cos_b_mups = float(
+                        np.dot(b_raw, mu_pseudo)
+                        / (np.linalg.norm(b_raw) * norm_mu_ps + 1e-30))
+                    print("\n[lie_raw diagnostic @ round 0]")
+                    print(f"  ||μ_raw||     = {norm_mu_raw:.4f}")
+                    print(f"  ||σ_raw||     = {norm_sig_raw:.4f}")
+                    print(f"  σ_raw/μ_raw   = {norm_sig_raw / (norm_mu_raw + 1e-30):.4f}")
+                    print(f"  ||b_lie_raw|| = {float(np.linalg.norm(b_raw)):.4f}")
+                    print(f"  ||μ_pseudo||  = {norm_mu_ps:.4f}")
+                    print(f"  cos(b_lie_raw, μ_pseudo) = {cos_b_mups:.4f}  "
+                          f"({'co-aligned ✓' if cos_b_mups > 0.5 else 'anti-aligned ✗' if cos_b_mups < -0.1 else 'orthogonal ~'})")
+                    print()
+
+            elif isinstance(self.gradient_attack, LIEAttack):
                 honest_grads = [pseudo_grads[i] for i in self.honest_indices]
                 replaced = self.gradient_attack(honest_grads, theta, round_k)
             else:

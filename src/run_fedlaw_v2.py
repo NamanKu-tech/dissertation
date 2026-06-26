@@ -30,7 +30,7 @@ def main() -> None:
     p.add_argument("--seed",   type=int, default=None, help="Override seed")
     p.add_argument("--attack", default=None,
                    choices=["flipping_label", "backdoor", "inverse_gradient",
-                            "global_parameter", "double", "lie"],
+                            "global_parameter", "double", "lie", "lie_raw"],
                    help="Override attack_name")
     p.add_argument("--n-clients", type=int, default=None, dest="n_clients",
                    help="Override n_clients")

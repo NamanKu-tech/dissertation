@@ -164,3 +164,34 @@ class LIEAttack:
     ) -> list[np.ndarray]:
         byz_vec = np.asarray(self._attack(honest_pseudo_grads), dtype=np.float64)
         return [byz_vec.copy() for _ in range(self.n_byz)]
+
+
+class LIERawGradAttack:
+    """LIE variant that computes μ/σ over raw mini-batch gradients ∇f(θ; batch).
+
+    Tests hypothesis (a) from REPORT.md: the paper computes LIE μ/σ over one
+    backward pass at θ, not over pseudo-gradients (θ−ψ_i)/α.  With E=3 local
+    epochs the pseudo-grad std is ~2× the mean; raw grads may have a smaller
+    σ/μ ratio and produce a co-aligned forged vector.
+
+    Interface differs from LIEAttack: __call__ receives raw_grads (list of
+    flat ∇f(θ; batch_i) vectors from honest clients).  The trainer is
+    responsible for collecting those via an extra backward pass at θ.
+    """
+
+    def __init__(self, n_byz: int, tau: float = 1.5):
+        self.n_byz = n_byz
+        self.tau = tau
+
+    def __call__(
+        self,
+        raw_grads: list[np.ndarray],
+        theta: np.ndarray,
+        round_k: int,
+    ) -> tuple[list[np.ndarray], np.ndarray, np.ndarray, np.ndarray]:
+        """Return (forged_vecs, mu_raw, sigma_raw, b_vec) for diagnostics."""
+        G = np.stack(raw_grads, axis=0)          # (n_honest, d)
+        mu = G.mean(axis=0)
+        sigma = G.std(axis=0, ddof=1)
+        b = mu + self.tau * sigma
+        return [b.copy() for _ in range(self.n_byz)], mu, sigma, b
