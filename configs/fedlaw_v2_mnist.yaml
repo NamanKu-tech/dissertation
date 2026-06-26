@@ -1,0 +1,24 @@
+# FedLAW v2 — paper scale (n=200, 200 rounds, GPU recommended)
+dataset: mnist
+data_folder: ./data
+n_clients: 200
+n_labels: 10
+q: 0.9
+frac_malicious: 0.4
+batch_size: 64
+
+model_name: mlp3_mnist
+loss_name: NLLLoss
+
+alpha: 0.01
+beta: 0.01
+E: 3
+w_freeze_rounds: 20
+T: 200
+eval_every: 10
+
+attack_name: flipping_label
+
+seed: 0
+results_dir: results/v2
+device: cpu

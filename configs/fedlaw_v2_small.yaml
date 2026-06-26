@@ -1,0 +1,24 @@
+# FedLAW v2 — small-scale CPU validation (n=20, 30 rounds)
+dataset: mnist
+data_folder: ./data
+n_clients: 20
+n_labels: 10
+q: 0.9
+frac_malicious: 0.4
+batch_size: 64
+
+model_name: mlp3_mnist
+loss_name: NLLLoss
+
+alpha: 0.01
+beta: 0.01
+E: 3
+w_freeze_rounds: 20
+T: 30
+eval_every: 5
+
+attack_name: flipping_label
+
+seed: 0
+results_dir: results/v2_small
+device: cpu
