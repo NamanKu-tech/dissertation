@@ -60,6 +60,8 @@ class FedLAWV2Config:
     # Attack
     attack_name: str = "flipping_label"
     lie_tau: float = 1.5
+    # Partial participation — Bernoulli-p sampling (Step 1: harness only)
+    p: float = 1.0
     # Output
     seed: int = 0
     results_dir: str = "./results/v2"
@@ -373,6 +375,11 @@ class FedLAWV2Trainer:
         weights_path = os.path.join(cfg.results_dir, "weights.npy")
 
         weight_history = [self.w.copy()]
+        # Bernoulli-p sampling RNG (separate stream from training RNG so that
+        # p=1.0 does NOT consume any sampling randomness — guarantees the
+        # fast path is byte-exact equivalent to the original trainer).
+        sampling_rng = np.random.default_rng(cfg.seed + 0xBEEF)
+        byz_set = set(self.byz_indices)
 
         with open(csv_path, "w", newline="") as fh:
             writer = csv.writer(fh)
@@ -396,22 +403,75 @@ class FedLAWV2Trainer:
                 G, f = self._collect(theta_k, round_k=k)
                 G, _ = _clip_gradients(G, self.honest_indices)
 
-                if k < cfg.w_freeze_rounds:
-                    # ── Round B: pseudo-grads at θ̃ ───────────────────────────
-                    theta_tilde = theta_k - cfg.alpha * (G.T @ self.w)
-                    G_tilde, f_tilde = self._collect(theta_tilde, round_k=k)
-                    G_tilde, _ = _clip_gradients(G_tilde, self.honest_indices)
+                if cfg.p >= 1.0:
+                    # ── Fast path: full participation (byte-exact baseline) ──
+                    if k < cfg.w_freeze_rounds:
+                        theta_tilde = theta_k - cfg.alpha * (G.T @ self.w)
+                        G_tilde, f_tilde = self._collect(theta_tilde, round_k=k)
+                        G_tilde, _ = _clip_gradients(G_tilde, self.honest_indices)
 
-                    # ── weight update (Algorithm 2 line 12) ───────────────────
-                    cross = G @ G_tilde.T                        # (n, n)
-                    h = (self.w
-                         + cfg.alpha * cfg.beta * (cross @ self.w)
-                         - cfg.beta * f_tilde)
-                    self.w = project_sparse_capped_simplex(
-                        h, s=self.sparsity, t=self.cap)
+                        cross = G @ G_tilde.T
+                        h = (self.w
+                             + cfg.alpha * cfg.beta * (cross @ self.w)
+                             - cfg.beta * f_tilde)
+                        self.w = project_sparse_capped_simplex(
+                            h, s=self.sparsity, t=self.cap)
 
-                # ── model update (Algorithm 2 lines 14–15) ────────────────────
-                theta_new = theta_k - cfg.alpha * (G.T @ self.w)
+                    theta_new = theta_k - cfg.alpha * (G.T @ self.w)
+
+                else:
+                    # ── Bernoulli-p sampling path (Design A — naive) ─────────
+                    mask = sampling_rng.random(cfg.n_clients) < cfg.p
+                    S_t = np.where(mask)[0]
+                    if k % cfg.eval_every == 0:
+                        n_byz_St = int(sum(1 for i in S_t if int(i) in byz_set))
+                        print(f"           |S_t|={len(S_t)}  byz_in_S_t={n_byz_St}  "
+                              f"hon_in_S_t={len(S_t) - n_byz_St}")
+
+                    if len(S_t) == 0:
+                        theta_new = theta_k     # nobody participated; skip
+                    else:
+                        hon_St = np.array(
+                            [j for j, idx in enumerate(S_t) if int(idx) not in byz_set],
+                            dtype=int)
+                        n_hon_St = len(hon_St)
+
+                        # This round's projection geometry
+                        s_t = max(n_hon_St, 1)
+                        slack_t = min(10, max(s_t - 2, 0))
+                        cap_t = 1.0 / max(s_t - slack_t, 1)
+                        # If s·t < 1 (degenerate small subset), fall back to t=1/s_t
+                        if s_t * cap_t < 1.0 - 1e-9:
+                            cap_t = 1.0 / s_t
+
+                        G_St = G[S_t]                                   # (|S_t|, d)
+
+                        # Renormalize current weights over S_t → simplex
+                        w_active = self.w[S_t].astype(np.float64).copy()
+                        s_sum = float(w_active.sum())
+                        if s_sum > 1e-12:
+                            w_active /= s_sum
+                        else:
+                            w_active[:] = 1.0 / len(S_t)
+
+                        if k < cfg.w_freeze_rounds and n_hon_St > 0:
+                            theta_tilde = theta_k - cfg.alpha * (G_St.T @ w_active)
+                            G_tilde, f_tilde = self._collect(theta_tilde, round_k=k)
+                            G_tilde, _ = _clip_gradients(G_tilde, self.honest_indices)
+                            G_tilde_St = G_tilde[S_t]
+                            f_tilde_St = f_tilde[S_t]
+
+                            cross = G_St @ G_tilde_St.T
+                            h = (w_active
+                                 + cfg.alpha * cfg.beta * (cross @ w_active)
+                                 - cfg.beta * f_tilde_St)
+                            w_active = project_sparse_capped_simplex(
+                                h, s=s_t, t=cap_t)
+
+                        # Store back into persistent self.w
+                        self.w[S_t] = w_active
+                        theta_new = theta_k - cfg.alpha * (G_St.T @ w_active)
+
                 self._set_global_flat(theta_new)
                 weight_history.append(self.w.copy())
 
