@@ -539,6 +539,144 @@ explanation that does not require concluding the paper's number is
 unreproducible from its published configuration.
 
 ────────────────────────────────────────────────────────────────────────
+## inverse_gradient f=0.1 re-entry — detection decays as model converges (2026-06-27)
+
+The completed inverse_gradient q=0.9 f=0.1 n=200 run shows Byzantine clients
+detected at round 10 (sum_byz: 0.1 → 0.001) but climbing back to the cap
+floor (0.1176 = 20/170) by round 20 and staying there. Final accuracy
+81.0% vs paper 89.5% (gap −8.5pp). This addendum determines whether the
+re-entry is caused by our v2 `w_freeze` extension or by a genuine FedLAW
+property.
+
+### D1 — sum_byz trajectory with w_freeze DISABLED
+
+`w_freeze_rounds=999` (effectively off), single short run, n=200,
+q=0.9, frac=0.1, inverse_gradient, seed=0:
+
+  round  8:  sum_byz = 0.0000   (detected, fully zero)
+  round  9:  sum_byz = 0.0010
+  round 10:  sum_byz = 0.0042
+  round 11:  sum_byz = 0.0144
+  round 12:  sum_byz = 0.0513
+  round 13:  sum_byz = 0.0685
+  round 14:  sum_byz = 0.0990
+  round 15:  sum_byz = 0.1176   ← CAP REACHED, w_freeze would have been off
+  rounds 16–29: 0.1176 (stable, even with freeze off)
+
+Re-entry to the cap is **complete by round 15**. The original v2 freeze
+fires at round 20 — five rounds too late to be the cause. With freeze
+disabled, the system reaches the same pinned state.
+
+  Freeze does NOT cause the re-entry. It locks in a state the dynamics
+  produced on their own.
+
+### D2 — h-component breakdown @ rounds 5/10/15/20
+
+For each round, h_i = w_i + α·β·(G·Gᵀ̃·w)_i − β·f̃_i. The two component
+magnitudes and per-client values:
+
+  round  5:  ||det_term|| = 0.1014,  ||loss_term|| = 0.2683,  ratio = 0.378
+             cross(byz, w) avg = −38.89   (strongly anti-aligned)
+             cross(hon, w) avg = +71.63
+  round 10:  ||det_term|| = 0.0520,  ||loss_term|| = 0.2250,  ratio = 0.231
+             cross(byz, w) avg = −30.78   (still anti-aligned)
+             cross(hon, w) avg = +36.27
+  round 15:  ||det_term|| = 0.0313,  ||loss_term|| = 0.2066,  ratio = 0.152
+             cross(byz, w) avg = +39.61   ← FLIPPED SIGN
+             cross(hon, w) avg = +18.25
+  round 20:  ||det_term|| = 0.0233,  ||loss_term|| = 0.1920,  ratio = 0.122
+             cross(byz, w) avg = +36.98
+             cross(hon, w) avg = +11.84
+
+Two simultaneous effects:
+
+  (i) The detection term's magnitude shrinks ~4× from round 5 to round 20
+      (||det|| 0.101 → 0.023). The loss term shrinks only ~1.4× over the
+      same span. Ratio collapses from 0.378 to 0.122.
+
+  (ii) The Byzantine cross-product itself FLIPS SIGN between rounds 10
+       and 15 — from −30.8 (anti-aligned, detectable) to +39.6
+       (positive, indistinguishable from a weak honest contribution).
+
+### Why the sign flips — mechanism
+
+The InverseGradient attack returns g_byz_i = −g_honest_i (the Byzantine
+client's *own* pseudo-gradient negated). At q=0.9 each group's gradient
+is dominated by its assigned class's signal. The Byzantine clients here
+are all from group 2 (label-2 dominant).
+
+At round 5, honest gradients across all 9 honest groups are individually
+large and the consensus direction is well-aligned with "improve general
+classification". Negating group 2's pseudo-gradient produces a vector
+that opposes this consensus → cross-product strongly negative.
+
+By round 15, honest gradients have shrunk (loss 2.3 → 1.36) and become
+increasingly class-specific (each group's gradient now mostly addresses
+its own dominant label, which is approximately orthogonal to other groups'
+gradients). The consensus is the average of 9 nearly-orthogonal class
+directions, much smaller than the per-group magnitude. Negating one
+group's pseudo-gradient (−g_group2) produces a vector that is no longer
+opposed to the consensus — it ends up mildly aligned with the residual
+"improve label-2 classification" direction that the consensus needs.
+
+### Why Byzantine clients re-enter the support (loss imputation interaction)
+
+Byzantine clients use imputed-mean-honest loss (in `_collect`). At round 15
+this imputed value is 1.36. Honest clients use their actual losses, which
+under q=0.9 heterogeneity are *highly variable* — well-trained groups have
+losses as low as 0.7, struggling groups have losses above 2.0.
+
+So the h-vector ordering at round 15 becomes:
+
+  high h:  low-loss honest clients (well-trained groups)
+  mid h:   Byzantine clients (imputed mean loss + slightly positive det)
+  low h:   high-loss honest clients (struggling groups)
+
+The sparse-capped projection selects the top-180 of 200. Byzantine fill
+the slots vacated by the lowest-h honest clients (the heterogeneous
+losers). Byzantine wind up at full cap, 20–25 honest clients get zero
+weight (the diagnostic shows `n_hon_sup` = 153–159 instead of 180).
+
+### Verdict: (B) — genuine detection-decay-on-convergence
+
+Evidence ruling out (A) freeze artifact: D1 shows re-entry completes at
+round 15 with the freeze disabled. The freeze cannot be the cause; it
+just makes the pinned state permanent past round 20 instead of allowing
+the dynamics to continue (which D1 shows would not have recovered).
+
+Evidence supporting (B) genuine property:
+  - Detection magnitude shrinks 4× by round 20 (D2 aggregate norms).
+  - Byzantine cross-product flips sign — the inverse_gradient attack
+    stops being anti-aligned at the same point that the model becomes
+    well-trained on easy honest features.
+  - Loss imputation puts Byzantine in the middle of the h-ranking,
+    above the struggling-group honest clients, who get displaced.
+
+Verdict is not (C) (both) because, with freeze off, the system **does
+not recover** after round 20 — sum_byz stays at the cap. There is no
+"freeze prevented a recovery" case to make.
+
+### Implications
+
+  - The flipping_label f=0.4 finding (cancellation, sum_byz pinned by
+    round 6) and the inverse_gradient f=0.1 finding (detection decay,
+    pinned by round 15) are TWO DISTINCT failure modes of FedLAW's
+    cross-product detector at paper scale with Cao q-split data.
+  - Both reproduce robustly. Neither is caused by our v2 w_freeze
+    extension.
+  - The paper's accuracy numbers at these configs (87.45% for flipping
+    f=0.4, 87.41% for inverse_gradient at f=0.4, ~89% for f=0.1
+    detected attacks) are not reproducible from our paper-faithful
+    setup without an unstated experimental detail we have not been
+    able to identify.
+
+The remaining n=200 detected-attack runs (backdoor, double, inverse at
+f=0.4) are likely to exhibit similar plateau behaviour — the detection
+decay mechanism does not depend on the specific attack, only on whether
+the attack's anti-alignment survives gradient shrinkage. To be confirmed
+by the open paper-scale runs (not started in this addendum).
+
+────────────────────────────────────────────────────────────────────────
 ## End of paper fixes validation
 
 Full report: ./results/paper_fixes/REPORT.md
