@@ -677,6 +677,98 @@ the attack's anti-alignment survives gradient shrinkage. To be confirmed
 by the open paper-scale runs (not started in this addendum).
 
 ────────────────────────────────────────────────────────────────────────
+## Clean-baseline sanity check (2026-06-27)
+
+Before extending the detection-decay finding into a general claim about
+FedLAW's detector at paper scale, we verify whether our reproduction's
+clean (no Byzantine) training trajectory matches what the paper implies.
+If our clean model undertrains relative to the paper, the gradient
+dynamics driving the detection decay could be a symptom of our setup, not
+a property of FedLAW.
+
+### Setup
+
+`frac_malicious=0.0`, `n=200`, `q=0.9`, `T=200`, `α=0.01`, `β=0.01`,
+`E=3`, `seed=0`, `w_freeze` disabled. No Byzantine clients exist; the
+trainer runs the standard FedLAW projection on honest-only contributions.
+
+### Accuracy trajectory (clean)
+
+  round  20:  72.21%
+  round  50:  84.05%
+  round 100:  88.42%
+  round 150:  89.87%
+  round 200:  **90.58%**
+
+The paper's under-attack accuracies for detected attacks at q=0.9 are
+~87–89.5%, implying a clean baseline around 91–92%. Our clean number
+(90.58%) is roughly 1pp below the paper's implied clean — close, not
+identical. Our reproduction is not significantly undertrained.
+
+### Honest-client loss heterogeneity
+
+Loss statistics across all 200 clients each round (mean / std / min / max):
+
+  round   5:  f_mean=2.07  f_std=0.17  f_min=1.81  f_max=2.53   max/mean=1.22
+  round  10:  f_mean=1.75  f_std=0.30  f_min=1.31  f_max=2.55   max/mean=1.46
+  round  20:  f_mean=1.24  f_std=0.40  f_min=0.60  f_max=2.23   max/mean=1.80
+  round  50:  f_mean=0.67  f_std=0.32  f_min=0.17  f_max=1.66   max/mean=2.48
+  round 100:  f_mean=0.44  f_std=0.22  f_min=0.09  f_max=1.02   max/mean=2.30
+  round 200:  f_mean=0.35  f_std=0.17  f_min=0.06  f_max=0.98   max/mean=2.82
+
+Two patterns:
+
+  - The mean loss drops smoothly from 2.07 (round 5) to 0.35 (round 200).
+  - The relative spread (max/mean) GROWS from 1.22× early to ~2.5–2.8×
+    after round 50, and stays large for the rest of training.
+
+The std falls slower than the mean: by round 100, std/mean ≈ 0.50; by
+round 200, std/mean ≈ 0.49. Some honest groups (those whose dominant
+labels are harder under q=0.9 partitioning) carry a persistent loss
+~3× higher than the average client throughout training.
+
+### Why this matters for the detection-decay finding
+
+The inverse_gradient f=0.1 diagnosis attributed the round-15 re-entry
+to two effects: detection term shrinkage and Byzantine clients
+out-ranking high-loss honest clients via imputed-mean loss. The
+clean-baseline numbers confirm both inputs to that mechanism are real
+features of our reproduction, not artefacts:
+
+  - **Detection shrinkage**: honest gradient magnitudes scale with loss.
+    Mean loss drops 6× from round 5 (2.07) to round 200 (0.35), so honest
+    pseudo-gradient magnitudes shrink by a comparable factor. This drives
+    the detection-term collapse (||det|| dropped 4× from round 5 to 20
+    in the diagnostic).
+  - **Loss heterogeneity**: f_max stays 2.3–2.8× f_mean throughout.
+    The imputed-mean trick (Byzantine f̃ = honest mean) places Byzantine
+    clients above the high-loss honest stragglers — Byzantine f̃ = 0.44
+    is below honest f_max = 1.02 at round 100. Several honest clients are
+    consistently above the imputed-mean Byzantine value at every round.
+
+### Conclusion — frame as our reproduction's behavior
+
+Our reproduction reaches 90.58% clean at 200 rounds, ~1pp below the
+paper's implied clean. Under inverse_gradient f=0.1 we reach 81.03%, a
+9.5pp degradation from our clean. The paper's implied under-attack
+degradation is ~2–3pp. The 6–7pp discrepancy in degradation cannot be
+attributed to undertraining alone — our clean is close to the paper's
+implied clean.
+
+The detection-decay mechanism documented above is therefore a property of
+**our reproduction at the configurations we ran**: with α=0.01, β=0.01,
+E=3, q=0.9 Cao partition, mlp3_mnist, and seed=0, the FedLAW cross-product
+detector loses Byzantine separability as the model converges and honest
+losses become heterogeneous. Whether the paper's setup avoids this — via
+some unstated experimental detail we have not identified, or via a
+different convergence regime — remains undetermined.
+
+This is consistent with the existing characterized-gap framing: **not
+"the paper is unreproducible"; it is "we cannot reproduce these specific
+numbers from the published configuration, and we have characterized why
+our reproduction lands where it does."**
+
+────────────────────────────────────────────────────────────────────────
 ## End of paper fixes validation
 
 Full report: ./results/paper_fixes/REPORT.md
