@@ -479,6 +479,66 @@ multi-group cancellation failure mode under Cao q-split data that is not
 acknowledged in the paper's mechanism description.
 
 ────────────────────────────────────────────────────────────────────────
+## Seed-sensitivity of flipping_label co-alignment finding (2026-06-27)
+
+The prior (C) verdict rested on a single seed (group draw {2,4,8,9}). Since
+the cancellation depends on which groups are corrupted and what they flip
+to, the finding was open to dismissal as a single-draw artefact. This
+section tests robustness across 5 different seeds (different group draws).
+
+### Setup
+
+flipping_label, n=200, q=0.9, frac=0.4, rounds 0–5, varying only `seed`.
+The seed controls both the data partition and `select_malicious_indices`
+group draw, so each seed gives a different corrupted-group set.
+
+### Results (round 5, cos(byz_mean, honest_mean))
+
+  seed  corrupted groups        cos        ||byz||  ||hon||  sum_byz
+   0    {2, 4, 8, 9}           +0.1617      9.248   15.309    0.274
+   1    {2, 4, 6, 9}           +0.1247     10.797   14.908    0.273
+   2    {0, 1, 4, 5}           +0.0829     21.133   15.574    0.273
+   3    {1, 2, 4, 5}           +0.1570     21.790   16.219    0.273
+   4    {3, 4, 8, 9}           +0.1192      9.502   15.442    0.302
+
+  cos mean = +0.1291,  std = 0.0286,  range = [+0.083, +0.162]
+  n positive = 5/5,  n negative = 0/5
+  sum_byz at round 5 across all seeds ≈ 0.273–0.302 (cap floor)
+
+### Interpretation
+
+5/5 seeds give positive cos at round 5 across distinct group draws —
+co-alignment is **not a single-draw artefact**. The std (0.029) is small
+relative to the mean (+0.129); no seed comes close to crossing zero. Per-
+seed ‖byz_mean‖ varies (9.2 to 21.8) — the magnitude of cancellation
+depends on which 4 groups are picked, but the sign of the residual's
+alignment with the honest mean does not.
+
+sum_byz lands at the cap floor (~0.273) in every seed: Byzantine
+weights pin at maximum cap allocation regardless of group draw. This is
+the detector failing the same way every time.
+
+### Verdict strengthens — (C) holds robustly
+
+The multi-group cancellation failure mode is a **reproducible property of
+FedLAW + Cao q-split at frac=0.4**, not a function of which specific
+groups are corrupted. The paper would not "average it away" across seeds:
+5/5 of our seeds give cos > 0 and sum_byz at the cap floor, so any seed
+average over this configuration would also show the gap.
+
+This rules out the seed-variance dismissal. The 18pp gap (~65% vs the
+paper's 87.45%) at flipping_label q=0.9 frac=0.4 stands as a reportable
+finding: FedLAW's cross-product detector cannot suppress 4-group label-flip
+Byzantine clients under Cao q=0.9 partitioning, because the averaged
+Byzantine pseudo-gradient cancels into a small co-aligned residual that
+the detector cannot distinguish from a weak honest gradient.
+
+The remaining possibility (B) — that the paper used an unstated
+experimental detail to obtain 87.45% — is now the only available
+explanation that does not require concluding the paper's number is
+unreproducible from its published configuration.
+
+────────────────────────────────────────────────────────────────────────
 ## End of paper fixes validation
 
 Full report: ./results/paper_fixes/REPORT.md
