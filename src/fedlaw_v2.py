@@ -399,16 +399,16 @@ class FedLAWV2Trainer:
 
         with open(csv_path, "w", newline="") as fh:
             writer = csv.writer(fh)
-            writer.writerow(["round", "test_acc", "test_loss"])
+            writer.writerow(["round", "test_acc", "test_loss", "sum_byz"])
 
             for k in range(cfg.T):
                 if k % cfg.eval_every == 0:
                     acc, loss = self._eval()
-                    writer.writerow([k, f"{acc:.6f}", f"{loss:.6f}"])
-                    fh.flush()
                     sum_byz = float(sum(self.w[i] for i in self.byz_indices)) if self.byz_indices else 0.0
                     max_byz = float(max(self.w[i] for i in self.byz_indices)) if self.byz_indices else 0.0
                     max_hon = float(max(self.w[i] for i in self.honest_indices))
+                    writer.writerow([k, f"{acc:.6f}", f"{loss:.6f}", f"{sum_byz:.6f}"])
+                    fh.flush()
                     print(f"[round {k:4d}] acc={acc:.4f}  loss={loss:.4f}"
                           f"  sum_byz={sum_byz:.4f}  max_byz={max_byz:.4f}"
                           f"  max_hon={max_hon:.4f}")
@@ -518,8 +518,10 @@ class FedLAWV2Trainer:
 
             # ── final eval ───────────────────────────────────────────────────
             acc, loss = self._eval()
-            writer.writerow([cfg.T, f"{acc:.6f}", f"{loss:.6f}"])
-            print(f"[round {cfg.T:4d}] acc={acc:.4f}  loss={loss:.4f}  [FINAL]")
+            sum_byz = float(sum(self.w[i] for i in self.byz_indices)) if self.byz_indices else 0.0
+            writer.writerow([cfg.T, f"{acc:.6f}", f"{loss:.6f}", f"{sum_byz:.6f}"])
+            print(f"[round {cfg.T:4d}] acc={acc:.4f}  loss={loss:.4f}  "
+                  f"sum_byz={sum_byz:.4f}  [FINAL]")
 
         W = np.array(weight_history)          # (T+1, n_clients)
         np.save(weights_path, W)
