@@ -1,0 +1,145 @@
+
+========================================================================
+A-clean-p1.0  p=1.0  frac=0.0  attack=flipping_label
+========================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0050
+[round   10] acc=0.6669  loss=1.6692  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0053
+[round   20] acc=0.7221  loss=1.1700  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0053
+[round   30] acc=0.7795  loss=0.8792  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0053
+[round   40] acc=0.8200  loss=0.7172  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0053
+[round   50] acc=0.8409  loss=0.6188  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0053
+[round   60] acc=0.8542  loss=0.5537  [FINAL]
+
+Metrics → /tmp/step2_p1.0_f0.0_flipping_label/metrics.csv
+Weights  → /tmp/step2_p1.0_f0.0_flipping_label/weights.npy  shape=(61, 200)
+
+  RESULT: final_acc = 0.8542
+  |S_t| range: min=200, mean=200.0, max=200
+  cap @ min |S_t|: s_t=200, t_t=0.0053, s·t=1.0526  feasible ✓
+
+========================================================================
+A-clean-p0.5  p=0.5  frac=0.0  attack=flipping_label
+========================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0050
+           |S_t|=97  byz_in_S_t=0  hon_in_S_t=97  mode=naive_A
+[round   10] acc=0.6282  loss=1.6674  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0115
+           |S_t|=88  byz_in_S_t=0  hon_in_S_t=88  mode=naive_A
+[round   20] acc=0.7076  loss=1.1688  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0105
+           |S_t|=102  byz_in_S_t=0  hon_in_S_t=102  mode=naive_A
+[round   30] acc=0.7839  loss=0.8695  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0091
+           |S_t|=107  byz_in_S_t=0  hon_in_S_t=107  mode=naive_A
+[round   40] acc=0.8236  loss=0.7033  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0098
+           |S_t|=100  byz_in_S_t=0  hon_in_S_t=100  mode=naive_A
+[round   50] acc=0.8535  loss=0.6038  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0102
+           |S_t|=98  byz_in_S_t=0  hon_in_S_t=98  mode=naive_A
+[round   60] acc=0.8631  loss=0.5401  [FINAL]
+
+Metrics → /tmp/step2_p0.5_f0.0_flipping_label/metrics.csv
+Weights  → /tmp/step2_p0.5_f0.0_flipping_label/weights.npy  shape=(61, 200)
+
+  RESULT: final_acc = 0.8631
+  |S_t| range: min=85, mean=100.6, max=118
+  cap @ min |S_t|: s_t=85, t_t=0.0133, s·t=1.1333  feasible ✓
+
+========================================================================
+A-clean-p0.25  p=0.25  frac=0.0  attack=flipping_label
+========================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0050
+           |S_t|=48  byz_in_S_t=0  hon_in_S_t=48  mode=naive_A
+[round   10] acc=0.5717  loss=1.6619  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0244
+           |S_t|=47  byz_in_S_t=0  hon_in_S_t=47  mode=naive_A
+[round   20] acc=0.6640  loss=1.1810  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0250
+           |S_t|=48  byz_in_S_t=0  hon_in_S_t=48  mode=naive_A
+[round   30] acc=0.7675  loss=0.8816  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0169
+           |S_t|=50  byz_in_S_t=0  hon_in_S_t=50  mode=naive_A
+[round   40] acc=0.8285  loss=0.7033  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0192
+           |S_t|=43  byz_in_S_t=0  hon_in_S_t=43  mode=naive_A
+[round   50] acc=0.8338  loss=0.6165  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0200
+           |S_t|=43  byz_in_S_t=0  hon_in_S_t=43  mode=naive_A
+[round   60] acc=0.8609  loss=0.5455  [FINAL]
+
+Metrics → /tmp/step2_p0.25_f0.0_flipping_label/metrics.csv
+Weights  → /tmp/step2_p0.25_f0.0_flipping_label/weights.npy  shape=(61, 200)
+
+  RESULT: final_acc = 0.8609
+  |S_t| range: min=36, mean=49.8, max=64
+  cap @ min |S_t|: s_t=36, t_t=0.0385, s·t=1.3846  feasible ✓
+
+========================================================================
+A-bd-p1.0  p=1.0  frac=0.1  attack=backdoor
+========================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.1000  max_byz=0.0050  max_hon=0.0050
+[round   10] acc=0.6159  loss=1.7515  sum_byz=0.0588  max_byz=0.0059  max_hon=0.0059
+[round   20] acc=0.6556  loss=1.3114  sum_byz=0.0642  max_byz=0.0059  max_hon=0.0059
+[round   30] acc=0.6889  loss=1.0607  sum_byz=0.0642  max_byz=0.0059  max_hon=0.0059
+[round   40] acc=0.7110  loss=0.9123  sum_byz=0.0642  max_byz=0.0059  max_hon=0.0059
+[round   50] acc=0.7363  loss=0.8137  sum_byz=0.0642  max_byz=0.0059  max_hon=0.0059
+[round   60] acc=0.7577  loss=0.7419  [FINAL]
+
+Metrics → /tmp/step2_p1.0_f0.1_backdoor/metrics.csv
+Weights  → /tmp/step2_p1.0_f0.1_backdoor/weights.npy  shape=(61, 200)
+
+  RESULT: final_acc = 0.7577
+  |S_t| range: min=200, mean=200.0, max=200
+  cap @ min |S_t|: s_t=180, t_t=0.0059, s·t=1.0588  feasible ✓
+
+========================================================================
+A-bd-p0.5  p=0.5  frac=0.1  attack=backdoor
+========================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.1000  max_byz=0.0050  max_hon=0.0050
+           |S_t|=97  byz_in_S_t=12  hon_in_S_t=85  mode=naive_A
+[round   10] acc=0.5656  loss=1.7340  sum_byz=0.0351  max_byz=0.0089  max_hon=0.0128
+           |S_t|=88  byz_in_S_t=11  hon_in_S_t=77  mode=naive_A
+[round   20] acc=0.6215  loss=1.3231  sum_byz=0.0707  max_byz=0.0093  max_hon=0.0115
+           |S_t|=102  byz_in_S_t=10  hon_in_S_t=92  mode=naive_A
+[round   30] acc=0.6992  loss=1.0487  sum_byz=0.0818  max_byz=0.0091  max_hon=0.0091
+           |S_t|=107  byz_in_S_t=13  hon_in_S_t=94  mode=naive_A
+[round   40] acc=0.7361  loss=0.9049  sum_byz=0.1275  max_byz=0.0098  max_hon=0.0098
+           |S_t|=100  byz_in_S_t=13  hon_in_S_t=87  mode=naive_A
+[round   50] acc=0.7803  loss=0.7938  sum_byz=0.0816  max_byz=0.0102  max_hon=0.0102
+           |S_t|=98  byz_in_S_t=8  hon_in_S_t=90  mode=naive_A
+[round   60] acc=0.8017  loss=0.7122  [FINAL]
+
+Metrics → /tmp/step2_p0.5_f0.1_backdoor/metrics.csv
+Weights  → /tmp/step2_p0.5_f0.1_backdoor/weights.npy  shape=(61, 200)
+
+  RESULT: final_acc = 0.8017
+  |S_t| range: min=85, mean=100.6, max=118
+  cap @ min |S_t|: s_t=76, t_t=0.0152, s·t=1.1515  feasible ✓
+
+========================================================================
+A-bd-p0.25  p=0.25  frac=0.1  attack=backdoor
+========================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.1000  max_byz=0.0050  max_hon=0.0050
+           |S_t|=48  byz_in_S_t=6  hon_in_S_t=42  mode=naive_A
+[round   10] acc=0.5514  loss=1.7400  sum_byz=0.0468  max_byz=0.0158  max_hon=0.0261
+           |S_t|=47  byz_in_S_t=2  hon_in_S_t=45  mode=naive_A
+[round   20] acc=0.6206  loss=1.3086  sum_byz=0.0339  max_byz=0.0171  max_hon=0.0263
+           |S_t|=48  byz_in_S_t=4  hon_in_S_t=44  mode=naive_A
+[round   30] acc=0.6888  loss=1.0584  sum_byz=0.0508  max_byz=0.0169  max_hon=0.0169
+           |S_t|=50  byz_in_S_t=5  hon_in_S_t=45  mode=naive_A
+[round   40] acc=0.7417  loss=0.9057  sum_byz=0.1154  max_byz=0.0192  max_hon=0.0192
+           |S_t|=43  byz_in_S_t=6  hon_in_S_t=37  mode=naive_A
+[round   50] acc=0.7563  loss=0.8124  sum_byz=0.0400  max_byz=0.0200  max_hon=0.0200
+           |S_t|=43  byz_in_S_t=3  hon_in_S_t=40  mode=naive_A
+[round   60] acc=0.7991  loss=0.7178  [FINAL]
+
+Metrics → /tmp/step2_p0.25_f0.1_backdoor/metrics.csv
+Weights  → /tmp/step2_p0.25_f0.1_backdoor/weights.npy  shape=(61, 200)
+
+  RESULT: final_acc = 0.7991
+  |S_t| range: min=36, mean=49.8, max=64
+  cap @ min |S_t|: s_t=32, t_t=0.0455, s·t=1.4545  feasible ✓
+
+========================================================================
+STEP 2 SUMMARY — naive_A characterization
+========================================================================
+label                p   frac    acc60   min|S_t|  mean|S_t|   s·t at min  feas?
+A-clean-p1.0       1.0    0.0   0.8542        200      200.0       1.0526  ✓
+A-clean-p0.5       0.5    0.0   0.8631         85      100.6       1.1333  ✓
+A-clean-p0.25     0.25    0.0   0.8609         36       49.8       1.3846  ✓
+A-bd-p1.0          1.0    0.1   0.7577        200      200.0       1.0588  ✓
+A-bd-p0.5          0.5    0.1   0.8017         85      100.6       1.1515  ✓
+A-bd-p0.25        0.25    0.1   0.7991         36       49.8       1.4545  ✓
+
+DONE
