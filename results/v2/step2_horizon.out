@@ -1,0 +1,347 @@
+
+================================================================================
+A-bd-p1.0-f0.1  p=1.0  frac=0.1  attack=backdoor  T=200  mode=naive_A
+================================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.1000  max_byz=0.0050  max_hon=0.0050
+[round    5] acc=0.5630  loss=2.0219  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0059
+[round   10] acc=0.6148  loss=1.7504  sum_byz=0.0588  max_byz=0.0059  max_hon=0.0059
+[round   15] acc=0.6356  loss=1.5067  sum_byz=0.0598  max_byz=0.0059  max_hon=0.0059
+[round   20] acc=0.6558  loss=1.3115  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   25] acc=0.6734  loss=1.1673  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   30] acc=0.6872  loss=1.0602  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   35] acc=0.7019  loss=0.9770  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   40] acc=0.7122  loss=0.9109  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   45] acc=0.7248  loss=0.8560  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   50] acc=0.7372  loss=0.8113  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   55] acc=0.7476  loss=0.7741  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   60] acc=0.7583  loss=0.7400  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   65] acc=0.7683  loss=0.7109  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   70] acc=0.7771  loss=0.6857  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   75] acc=0.7868  loss=0.6624  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   80] acc=0.7937  loss=0.6424  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   85] acc=0.8012  loss=0.6233  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   90] acc=0.8090  loss=0.6066  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round   95] acc=0.8152  loss=0.5922  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  100] acc=0.8197  loss=0.5776  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  105] acc=0.8243  loss=0.5646  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  110] acc=0.8280  loss=0.5533  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  115] acc=0.8328  loss=0.5416  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  120] acc=0.8358  loss=0.5313  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  125] acc=0.8390  loss=0.5222  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  130] acc=0.8411  loss=0.5131  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  135] acc=0.8445  loss=0.5044  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  140] acc=0.8486  loss=0.4960  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  145] acc=0.8502  loss=0.4892  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  150] acc=0.8538  loss=0.4814  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  155] acc=0.8558  loss=0.4758  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  160] acc=0.8583  loss=0.4688  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  165] acc=0.8602  loss=0.4631  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  170] acc=0.8625  loss=0.4570  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  175] acc=0.8647  loss=0.4520  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  180] acc=0.8656  loss=0.4471  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  185] acc=0.8672  loss=0.4418  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  190] acc=0.8688  loss=0.4376  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  195] acc=0.8706  loss=0.4324  sum_byz=0.0624  max_byz=0.0059  max_hon=0.0059
+[round  200] acc=0.8715  loss=0.4286  [FINAL]
+
+Metrics → /tmp/step2hz_p1.0_f0.1/metrics.csv
+Weights  → /tmp/step2hz_p1.0_f0.1/weights.npy  shape=(201, 200)
+
+  A-bd-p1.0-f0.1 acc trajectory:
+    round  60: acc = 0.7583, loss = 0.7400
+    round 100: acc = 0.8197, loss = 0.5776
+    round 150: acc = 0.8538, loss = 0.4814
+    round 200: acc = 0.8715, loss = 0.4286
+
+================================================================================
+A-bd-p0.5-f0.1  p=0.5  frac=0.1  attack=backdoor  T=200  mode=naive_A
+================================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.1000  max_byz=0.0050  max_hon=0.0050
+           |S_t|=97  byz_in_S_t=12  hon_in_S_t=85  mode=naive_A
+[round    5] acc=0.4849  loss=2.0283  sum_byz=0.0000  max_byz=0.0000  max_hon=0.0145
+           |S_t|=112  byz_in_S_t=13  hon_in_S_t=99  mode=naive_A
+[round   10] acc=0.5682  loss=1.7370  sum_byz=0.0265  max_byz=0.0090  max_hon=0.0128
+           |S_t|=88  byz_in_S_t=11  hon_in_S_t=77  mode=naive_A
+[round   15] acc=0.6152  loss=1.4805  sum_byz=0.0795  max_byz=0.0092  max_hon=0.0115
+           |S_t|=102  byz_in_S_t=14  hon_in_S_t=88  mode=naive_A
+[round   20] acc=0.6239  loss=1.3252  sum_byz=0.0711  max_byz=0.0093  max_hon=0.0115
+           |S_t|=102  byz_in_S_t=10  hon_in_S_t=92  mode=naive_A
+[round   25] acc=0.6761  loss=1.1584  sum_byz=0.1359  max_byz=0.0097  max_hon=0.0097
+           |S_t|=98  byz_in_S_t=10  hon_in_S_t=88  mode=naive_A
+[round   30] acc=0.6990  loss=1.0507  sum_byz=0.0818  max_byz=0.0091  max_hon=0.0091
+           |S_t|=107  byz_in_S_t=13  hon_in_S_t=94  mode=naive_A
+[round   35] acc=0.7400  loss=0.9624  sum_byz=0.0741  max_byz=0.0093  max_hon=0.0093
+           |S_t|=90  byz_in_S_t=11  hon_in_S_t=79  mode=naive_A
+[round   40] acc=0.7382  loss=0.9060  sum_byz=0.1275  max_byz=0.0098  max_hon=0.0098
+           |S_t|=100  byz_in_S_t=13  hon_in_S_t=87  mode=naive_A
+[round   45] acc=0.7655  loss=0.8415  sum_byz=0.0826  max_byz=0.0092  max_hon=0.0092
+           |S_t|=96  byz_in_S_t=8  hon_in_S_t=88  mode=naive_A
+[round   50] acc=0.7786  loss=0.7954  sum_byz=0.0816  max_byz=0.0102  max_hon=0.0102
+           |S_t|=98  byz_in_S_t=8  hon_in_S_t=90  mode=naive_A
+[round   55] acc=0.7860  loss=0.7517  sum_byz=0.0625  max_byz=0.0104  max_hon=0.0104
+           |S_t|=101  byz_in_S_t=12  hon_in_S_t=89  mode=naive_A
+[round   60] acc=0.8018  loss=0.7135  sum_byz=0.0680  max_byz=0.0097  max_hon=0.0097
+           |S_t|=106  byz_in_S_t=9  hon_in_S_t=97  mode=naive_A
+[round   65] acc=0.8091  loss=0.6824  sum_byz=0.1215  max_byz=0.0093  max_hon=0.0093
+           |S_t|=101  byz_in_S_t=8  hon_in_S_t=93  mode=naive_A
+[round   70] acc=0.8145  loss=0.6554  sum_byz=0.0857  max_byz=0.0095  max_hon=0.0095
+           |S_t|=101  byz_in_S_t=9  hon_in_S_t=92  mode=naive_A
+[round   75] acc=0.8249  loss=0.6252  sum_byz=0.0737  max_byz=0.0105  max_hon=0.0105
+           |S_t|=92  byz_in_S_t=9  hon_in_S_t=83  mode=naive_A
+[round   80] acc=0.8247  loss=0.6146  sum_byz=0.1042  max_byz=0.0104  max_hon=0.0104
+           |S_t|=103  byz_in_S_t=10  hon_in_S_t=93  mode=naive_A
+[round   85] acc=0.8362  loss=0.5882  sum_byz=0.0763  max_byz=0.0085  max_hon=0.0085
+           |S_t|=91  byz_in_S_t=10  hon_in_S_t=81  mode=naive_A
+[round   90] acc=0.8415  loss=0.5704  sum_byz=0.1100  max_byz=0.0100  max_hon=0.0100
+           |S_t|=113  byz_in_S_t=11  hon_in_S_t=102  mode=naive_A
+[round   95] acc=0.8460  loss=0.5543  sum_byz=0.1101  max_byz=0.0092  max_hon=0.0092
+           |S_t|=99  byz_in_S_t=12  hon_in_S_t=87  mode=naive_A
+[round  100] acc=0.8493  loss=0.5422  sum_byz=0.1154  max_byz=0.0096  max_hon=0.0096
+           |S_t|=102  byz_in_S_t=10  hon_in_S_t=92  mode=naive_A
+[round  105] acc=0.8540  loss=0.5271  sum_byz=0.0700  max_byz=0.0100  max_hon=0.0100
+           |S_t|=104  byz_in_S_t=9  hon_in_S_t=95  mode=naive_A
+[round  110] acc=0.8545  loss=0.5177  sum_byz=0.0978  max_byz=0.0109  max_hon=0.0109
+           |S_t|=100  byz_in_S_t=12  hon_in_S_t=88  mode=naive_A
+[round  115] acc=0.8591  loss=0.5068  sum_byz=0.1023  max_byz=0.0114  max_hon=0.0114
+           |S_t|=105  byz_in_S_t=11  hon_in_S_t=94  mode=naive_A
+[round  120] acc=0.8622  loss=0.4966  sum_byz=0.1132  max_byz=0.0094  max_hon=0.0094
+           |S_t|=97  byz_in_S_t=10  hon_in_S_t=87  mode=naive_A
+[round  125] acc=0.8626  loss=0.4945  sum_byz=0.1300  max_byz=0.0100  max_hon=0.0100
+           |S_t|=102  byz_in_S_t=11  hon_in_S_t=91  mode=naive_A
+[round  130] acc=0.8630  loss=0.4848  sum_byz=0.1099  max_byz=0.0110  max_hon=0.0110
+           |S_t|=102  byz_in_S_t=13  hon_in_S_t=89  mode=naive_A
+[round  135] acc=0.8685  loss=0.4739  sum_byz=0.0755  max_byz=0.0094  max_hon=0.0094
+           |S_t|=90  byz_in_S_t=13  hon_in_S_t=77  mode=naive_A
+[round  140] acc=0.8688  loss=0.4661  sum_byz=0.1000  max_byz=0.0111  max_hon=0.0111
+           |S_t|=100  byz_in_S_t=14  hon_in_S_t=86  mode=naive_A
+[round  145] acc=0.8724  loss=0.4577  sum_byz=0.0865  max_byz=0.0096  max_hon=0.0096
+           |S_t|=106  byz_in_S_t=11  hon_in_S_t=95  mode=naive_A
+[round  150] acc=0.8743  loss=0.4508  sum_byz=0.0849  max_byz=0.0094  max_hon=0.0094
+           |S_t|=92  byz_in_S_t=12  hon_in_S_t=80  mode=naive_A
+[round  155] acc=0.8734  loss=0.4434  sum_byz=0.0865  max_byz=0.0096  max_hon=0.0096
+           |S_t|=107  byz_in_S_t=8  hon_in_S_t=99  mode=naive_A
+[round  160] acc=0.8747  loss=0.4426  sum_byz=0.1333  max_byz=0.0095  max_hon=0.0095
+           |S_t|=96  byz_in_S_t=8  hon_in_S_t=88  mode=naive_A
+[round  165] acc=0.8769  loss=0.4361  sum_byz=0.1222  max_byz=0.0111  max_hon=0.0111
+           |S_t|=100  byz_in_S_t=13  hon_in_S_t=87  mode=naive_A
+[round  170] acc=0.8776  loss=0.4279  sum_byz=0.1154  max_byz=0.0096  max_hon=0.0096
+           |S_t|=103  byz_in_S_t=9  hon_in_S_t=94  mode=naive_A
+[round  175] acc=0.8788  loss=0.4276  sum_byz=0.1020  max_byz=0.0102  max_hon=0.0102
+           |S_t|=108  byz_in_S_t=11  hon_in_S_t=97  mode=naive_A
+[round  180] acc=0.8818  loss=0.4180  sum_byz=0.0729  max_byz=0.0104  max_hon=0.0104
+           |S_t|=95  byz_in_S_t=9  hon_in_S_t=86  mode=naive_A
+[round  185] acc=0.8815  loss=0.4159  sum_byz=0.1010  max_byz=0.0101  max_hon=0.0101
+           |S_t|=97  byz_in_S_t=13  hon_in_S_t=84  mode=naive_A
+[round  190] acc=0.8852  loss=0.4092  sum_byz=0.0877  max_byz=0.0088  max_hon=0.0088
+           |S_t|=101  byz_in_S_t=9  hon_in_S_t=92  mode=naive_A
+[round  195] acc=0.8834  loss=0.4051  sum_byz=0.0842  max_byz=0.0105  max_hon=0.0105
+           |S_t|=104  byz_in_S_t=10  hon_in_S_t=94  mode=naive_A
+[round  200] acc=0.8849  loss=0.4024  [FINAL]
+
+Metrics → /tmp/step2hz_p0.5_f0.1/metrics.csv
+Weights  → /tmp/step2hz_p0.5_f0.1/weights.npy  shape=(201, 200)
+
+  A-bd-p0.5-f0.1 acc trajectory:
+    round  60: acc = 0.8018, loss = 0.7135
+    round 100: acc = 0.8493, loss = 0.5422
+    round 150: acc = 0.8743, loss = 0.4508
+    round 200: acc = 0.8849, loss = 0.4024
+
+================================================================================
+A-bd-p0.25-f0.1  p=0.25  frac=0.1  attack=backdoor  T=200  mode=naive_A
+================================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.1000  max_byz=0.0050  max_hon=0.0050
+           |S_t|=48  byz_in_S_t=6  hon_in_S_t=42  mode=naive_A
+[round    5] acc=0.3934  loss=2.0793  sum_byz=0.0412  max_byz=0.0139  max_hon=0.0315
+           |S_t|=50  byz_in_S_t=6  hon_in_S_t=44  mode=naive_A
+[round   10] acc=0.5520  loss=1.7417  sum_byz=0.0471  max_byz=0.0160  max_hon=0.0258
+           |S_t|=47  byz_in_S_t=2  hon_in_S_t=45  mode=naive_A
+[round   15] acc=0.6298  loss=1.4990  sum_byz=0.1060  max_byz=0.0213  max_hon=0.0286
+           |S_t|=50  byz_in_S_t=4  hon_in_S_t=46  mode=naive_A
+[round   20] acc=0.6227  loss=1.3067  sum_byz=0.0340  max_byz=0.0171  max_hon=0.0263
+           |S_t|=48  byz_in_S_t=4  hon_in_S_t=44  mode=naive_A
+[round   25] acc=0.6899  loss=1.1584  sum_byz=0.1875  max_byz=0.0208  max_hon=0.0208
+           |S_t|=52  byz_in_S_t=4  hon_in_S_t=48  mode=naive_A
+[round   30] acc=0.6894  loss=1.0583  sum_byz=0.0508  max_byz=0.0169  max_hon=0.0169
+           |S_t|=50  byz_in_S_t=5  hon_in_S_t=45  mode=naive_A
+[round   35] acc=0.7417  loss=0.9766  sum_byz=0.1224  max_byz=0.0204  max_hon=0.0204
+           |S_t|=40  byz_in_S_t=4  hon_in_S_t=36  mode=naive_A
+[round   40] acc=0.7413  loss=0.9077  sum_byz=0.1154  max_byz=0.0192  max_hon=0.0192
+           |S_t|=43  byz_in_S_t=6  hon_in_S_t=37  mode=naive_A
+[round   45] acc=0.7450  loss=0.8515  sum_byz=0.0769  max_byz=0.0192  max_hon=0.0192
+           |S_t|=45  byz_in_S_t=3  hon_in_S_t=42  mode=naive_A
+[round   50] acc=0.7562  loss=0.8126  sum_byz=0.0400  max_byz=0.0200  max_hon=0.0200
+           |S_t|=43  byz_in_S_t=3  hon_in_S_t=40  mode=naive_A
+[round   55] acc=0.7775  loss=0.7586  sum_byz=0.0213  max_byz=0.0213  max_hon=0.0213
+           |S_t|=48  byz_in_S_t=6  hon_in_S_t=42  mode=naive_A
+[round   60] acc=0.7994  loss=0.7187  sum_byz=0.0377  max_byz=0.0189  max_hon=0.0189
+           |S_t|=55  byz_in_S_t=5  hon_in_S_t=50  mode=naive_A
+[round   65] acc=0.7990  loss=0.6982  sum_byz=0.1429  max_byz=0.0179  max_hon=0.0179
+           |S_t|=47  byz_in_S_t=3  hon_in_S_t=44  mode=naive_A
+[round   70] acc=0.8128  loss=0.6710  sum_byz=0.0980  max_byz=0.0196  max_hon=0.0196
+           |S_t|=47  byz_in_S_t=4  hon_in_S_t=43  mode=naive_A
+[round   75] acc=0.8210  loss=0.6371  sum_byz=0.1163  max_byz=0.0233  max_hon=0.0233
+           |S_t|=50  byz_in_S_t=6  hon_in_S_t=44  mode=naive_A
+[round   80] acc=0.8203  loss=0.6246  sum_byz=0.0893  max_byz=0.0179  max_hon=0.0179
+           |S_t|=45  byz_in_S_t=3  hon_in_S_t=42  mode=naive_A
+[round   85] acc=0.8308  loss=0.6008  sum_byz=0.1034  max_byz=0.0172  max_hon=0.0172
+           |S_t|=40  byz_in_S_t=7  hon_in_S_t=33  mode=naive_A
+[round   90] acc=0.8423  loss=0.5790  sum_byz=0.1111  max_byz=0.0185  max_hon=0.0185
+           |S_t|=58  byz_in_S_t=4  hon_in_S_t=54  mode=naive_A
+[round   95] acc=0.8434  loss=0.5631  sum_byz=0.1167  max_byz=0.0167  max_hon=0.0167
+           |S_t|=45  byz_in_S_t=7  hon_in_S_t=38  mode=naive_A
+[round  100] acc=0.8450  loss=0.5532  sum_byz=0.0962  max_byz=0.0192  max_hon=0.0192
+           |S_t|=58  byz_in_S_t=5  hon_in_S_t=53  mode=naive_A
+[round  105] acc=0.8532  loss=0.5334  sum_byz=0.0577  max_byz=0.0192  max_hon=0.0192
+           |S_t|=49  byz_in_S_t=4  hon_in_S_t=45  mode=naive_A
+[round  110] acc=0.8527  loss=0.5229  sum_byz=0.0909  max_byz=0.0182  max_hon=0.0182
+           |S_t|=52  byz_in_S_t=4  hon_in_S_t=48  mode=naive_A
+[round  115] acc=0.8577  loss=0.5127  sum_byz=0.1087  max_byz=0.0217  max_hon=0.0217
+           |S_t|=48  byz_in_S_t=7  hon_in_S_t=41  mode=naive_A
+[round  120] acc=0.8585  loss=0.5096  sum_byz=0.1296  max_byz=0.0185  max_hon=0.0185
+           |S_t|=42  byz_in_S_t=4  hon_in_S_t=38  mode=naive_A
+[round  125] acc=0.8587  loss=0.5015  sum_byz=0.1429  max_byz=0.0179  max_hon=0.0179
+           |S_t|=51  byz_in_S_t=6  hon_in_S_t=45  mode=naive_A
+[round  130] acc=0.8643  loss=0.4838  sum_byz=0.0870  max_byz=0.0217  max_hon=0.0217
+           |S_t|=51  byz_in_S_t=7  hon_in_S_t=44  mode=naive_A
+[round  135] acc=0.8657  loss=0.4823  sum_byz=0.1111  max_byz=0.0222  max_hon=0.0222
+           |S_t|=45  byz_in_S_t=6  hon_in_S_t=39  mode=naive_A
+[round  140] acc=0.8632  loss=0.4791  sum_byz=0.1087  max_byz=0.0217  max_hon=0.0217
+           |S_t|=44  byz_in_S_t=7  hon_in_S_t=37  mode=naive_A
+[round  145] acc=0.8687  loss=0.4669  sum_byz=0.0714  max_byz=0.0179  max_hon=0.0179
+           |S_t|=54  byz_in_S_t=6  hon_in_S_t=48  mode=naive_A
+[round  150] acc=0.8715  loss=0.4589  sum_byz=0.1091  max_byz=0.0182  max_hon=0.0182
+           |S_t|=42  byz_in_S_t=9  hon_in_S_t=33  mode=naive_A
+[round  155] acc=0.8673  loss=0.4623  sum_byz=0.1333  max_byz=0.0222  max_hon=0.0222
+           |S_t|=53  byz_in_S_t=6  hon_in_S_t=47  mode=naive_A
+[round  160] acc=0.8703  loss=0.4603  sum_byz=0.1569  max_byz=0.0196  max_hon=0.0196
+           |S_t|=47  byz_in_S_t=3  hon_in_S_t=44  mode=naive_A
+[round  165] acc=0.8757  loss=0.4410  sum_byz=0.0952  max_byz=0.0238  max_hon=0.0238
+           |S_t|=44  byz_in_S_t=6  hon_in_S_t=38  mode=naive_A
+[round  170] acc=0.8759  loss=0.4344  sum_byz=0.1053  max_byz=0.0175  max_hon=0.0175
+           |S_t|=50  byz_in_S_t=6  hon_in_S_t=44  mode=naive_A
+[round  175] acc=0.8771  loss=0.4343  sum_byz=0.1452  max_byz=0.0161  max_hon=0.0161
+           |S_t|=51  byz_in_S_t=6  hon_in_S_t=45  mode=naive_A
+[round  180] acc=0.8797  loss=0.4238  sum_byz=0.0652  max_byz=0.0217  max_hon=0.0217
+           |S_t|=46  byz_in_S_t=4  hon_in_S_t=42  mode=naive_A
+[round  185] acc=0.8803  loss=0.4262  sum_byz=0.1373  max_byz=0.0196  max_hon=0.0196
+           |S_t|=42  byz_in_S_t=6  hon_in_S_t=36  mode=naive_A
+[round  190] acc=0.8830  loss=0.4149  sum_byz=0.0556  max_byz=0.0185  max_hon=0.0185
+           |S_t|=54  byz_in_S_t=5  hon_in_S_t=49  mode=naive_A
+[round  195] acc=0.8809  loss=0.4100  sum_byz=0.1111  max_byz=0.0222  max_hon=0.0222
+           |S_t|=57  byz_in_S_t=7  hon_in_S_t=50  mode=naive_A
+[round  200] acc=0.8820  loss=0.4060  [FINAL]
+
+Metrics → /tmp/step2hz_p0.25_f0.1/metrics.csv
+Weights  → /tmp/step2hz_p0.25_f0.1/weights.npy  shape=(201, 200)
+
+  A-bd-p0.25-f0.1 acc trajectory:
+    round  60: acc = 0.7994, loss = 0.7187
+    round 100: acc = 0.8450, loss = 0.5532
+    round 150: acc = 0.8715, loss = 0.4589
+    round 200: acc = 0.8820, loss = 0.4060
+
+================================================================================
+A-bd-p0.25-f0.4-STRESS  p=0.25  frac=0.4  attack=backdoor  T=200  mode=naive_A
+================================================================================
+[round    0] acc=0.0686  loss=2.3092  sum_byz=0.4000  max_byz=0.0050  max_hon=0.0050
+           |S_t|=48  byz_in_S_t=17  hon_in_S_t=31  mode=naive_A
+[round    5] acc=0.3867  loss=2.2224  sum_byz=0.1070  max_byz=0.0357  max_hon=0.0466
+           |S_t|=50  byz_in_S_t=25  hon_in_S_t=25  mode=naive_A
+[round   10] acc=0.4218  loss=1.9785  sum_byz=0.1799  max_byz=0.0302  max_hon=0.0364
+           |S_t|=47  byz_in_S_t=16  hon_in_S_t=31  mode=naive_A
+[round   15] acc=0.4608  loss=1.7406  sum_byz=0.5823  max_byz=0.0368  max_hon=0.0410
+           |S_t|=50  byz_in_S_t=21  hon_in_S_t=29  mode=naive_A
+[round   20] acc=0.4628  loss=1.6805  sum_byz=0.4287  max_byz=0.0335  max_hon=0.0381
+           |S_t|=48  byz_in_S_t=13  hon_in_S_t=35  mode=naive_A
+[round   25] acc=0.5204  loss=1.5120  sum_byz=0.5000  max_byz=0.0208  max_hon=0.0208
+           |S_t|=52  byz_in_S_t=18  hon_in_S_t=34  mode=naive_A
+[round   30] acc=0.5279  loss=1.4621  sum_byz=0.3898  max_byz=0.0169  max_hon=0.0169
+           |S_t|=50  byz_in_S_t=24  hon_in_S_t=26  mode=naive_A
+[round   35] acc=0.5298  loss=1.4228  sum_byz=0.4490  max_byz=0.0204  max_hon=0.0204
+           |S_t|=40  byz_in_S_t=15  hon_in_S_t=25  mode=naive_A
+[round   40] acc=0.5390  loss=1.3855  sum_byz=0.4615  max_byz=0.0192  max_hon=0.0192
+           |S_t|=43  byz_in_S_t=20  hon_in_S_t=23  mode=naive_A
+[round   45] acc=0.5431  loss=1.3350  sum_byz=0.3846  max_byz=0.0192  max_hon=0.0192
+           |S_t|=45  byz_in_S_t=18  hon_in_S_t=27  mode=naive_A
+[round   50] acc=0.5489  loss=1.3276  sum_byz=0.4800  max_byz=0.0200  max_hon=0.0200
+           |S_t|=43  byz_in_S_t=19  hon_in_S_t=24  mode=naive_A
+[round   55] acc=0.5495  loss=1.2847  sum_byz=0.4681  max_byz=0.0213  max_hon=0.0213
+           |S_t|=48  byz_in_S_t=20  hon_in_S_t=28  mode=naive_A
+[round   60] acc=0.5537  loss=1.2598  sum_byz=0.3962  max_byz=0.0189  max_hon=0.0189
+           |S_t|=55  byz_in_S_t=19  hon_in_S_t=36  mode=naive_A
+[round   65] acc=0.5523  loss=1.2325  sum_byz=0.3929  max_byz=0.0179  max_hon=0.0179
+           |S_t|=47  byz_in_S_t=19  hon_in_S_t=28  mode=naive_A
+[round   70] acc=0.5595  loss=1.2118  sum_byz=0.4118  max_byz=0.0196  max_hon=0.0196
+           |S_t|=47  byz_in_S_t=17  hon_in_S_t=30  mode=naive_A
+[round   75] acc=0.5633  loss=1.1711  sum_byz=0.3721  max_byz=0.0233  max_hon=0.0233
+           |S_t|=50  byz_in_S_t=20  hon_in_S_t=30  mode=naive_A
+[round   80] acc=0.5694  loss=1.1474  sum_byz=0.4286  max_byz=0.0179  max_hon=0.0179
+           |S_t|=45  byz_in_S_t=13  hon_in_S_t=32  mode=naive_A
+[round   85] acc=0.5784  loss=1.1175  sum_byz=0.3793  max_byz=0.0172  max_hon=0.0172
+           |S_t|=40  byz_in_S_t=17  hon_in_S_t=23  mode=naive_A
+[round   90] acc=0.5864  loss=1.0969  sum_byz=0.4259  max_byz=0.0185  max_hon=0.0185
+           |S_t|=58  byz_in_S_t=23  hon_in_S_t=35  mode=naive_A
+[round   95] acc=0.5998  loss=1.0736  sum_byz=0.3667  max_byz=0.0167  max_hon=0.0167
+           |S_t|=45  byz_in_S_t=21  hon_in_S_t=24  mode=naive_A
+[round  100] acc=0.6121  loss=1.0469  sum_byz=0.3462  max_byz=0.0192  max_hon=0.0192
+           |S_t|=58  byz_in_S_t=27  hon_in_S_t=31  mode=naive_A
+[round  105] acc=0.6168  loss=1.0334  sum_byz=0.3846  max_byz=0.0192  max_hon=0.0192
+           |S_t|=49  byz_in_S_t=26  hon_in_S_t=23  mode=naive_A
+[round  110] acc=0.6386  loss=1.0040  sum_byz=0.3818  max_byz=0.0182  max_hon=0.0182
+           |S_t|=52  byz_in_S_t=22  hon_in_S_t=30  mode=naive_A
+[round  115] acc=0.6362  loss=1.0047  sum_byz=0.4130  max_byz=0.0217  max_hon=0.0217
+           |S_t|=48  byz_in_S_t=21  hon_in_S_t=27  mode=naive_A
+[round  120] acc=0.6559  loss=0.9721  sum_byz=0.4074  max_byz=0.0185  max_hon=0.0185
+           |S_t|=42  byz_in_S_t=15  hon_in_S_t=27  mode=naive_A
+[round  125] acc=0.6659  loss=0.9526  sum_byz=0.4643  max_byz=0.0179  max_hon=0.0179
+           |S_t|=51  byz_in_S_t=22  hon_in_S_t=29  mode=naive_A
+[round  130] acc=0.6741  loss=0.9319  sum_byz=0.4348  max_byz=0.0217  max_hon=0.0217
+           |S_t|=51  byz_in_S_t=15  hon_in_S_t=36  mode=naive_A
+[round  135] acc=0.6879  loss=0.9053  sum_byz=0.3556  max_byz=0.0222  max_hon=0.0222
+           |S_t|=45  byz_in_S_t=18  hon_in_S_t=27  mode=naive_A
+[round  140] acc=0.6928  loss=0.8938  sum_byz=0.3478  max_byz=0.0217  max_hon=0.0217
+           |S_t|=44  byz_in_S_t=17  hon_in_S_t=27  mode=naive_A
+[round  145] acc=0.7025  loss=0.8718  sum_byz=0.3750  max_byz=0.0179  max_hon=0.0179
+           |S_t|=54  byz_in_S_t=20  hon_in_S_t=34  mode=naive_A
+[round  150] acc=0.7146  loss=0.8548  sum_byz=0.3636  max_byz=0.0182  max_hon=0.0182
+           |S_t|=42  byz_in_S_t=21  hon_in_S_t=21  mode=naive_A
+[round  155] acc=0.7099  loss=0.8568  sum_byz=0.4222  max_byz=0.0222  max_hon=0.0222
+           |S_t|=53  byz_in_S_t=21  hon_in_S_t=32  mode=naive_A
+[round  160] acc=0.7245  loss=0.8415  sum_byz=0.4118  max_byz=0.0196  max_hon=0.0196
+           |S_t|=47  byz_in_S_t=17  hon_in_S_t=30  mode=naive_A
+[round  165] acc=0.7405  loss=0.8077  sum_byz=0.4286  max_byz=0.0238  max_hon=0.0238
+           |S_t|=44  byz_in_S_t=18  hon_in_S_t=26  mode=naive_A
+[round  170] acc=0.7508  loss=0.7859  sum_byz=0.3684  max_byz=0.0175  max_hon=0.0175
+           |S_t|=50  byz_in_S_t=28  hon_in_S_t=22  mode=naive_A
+[round  175] acc=0.7452  loss=0.7905  sum_byz=0.4032  max_byz=0.0161  max_hon=0.0161
+           |S_t|=51  byz_in_S_t=19  hon_in_S_t=32  mode=naive_A
+[round  180] acc=0.7625  loss=0.7680  sum_byz=0.4348  max_byz=0.0217  max_hon=0.0217
+           |S_t|=46  byz_in_S_t=15  hon_in_S_t=31  mode=naive_A
+[round  185] acc=0.7614  loss=0.7644  sum_byz=0.4314  max_byz=0.0196  max_hon=0.0196
+           |S_t|=42  byz_in_S_t=22  hon_in_S_t=20  mode=naive_A
+[round  190] acc=0.7727  loss=0.7421  sum_byz=0.4074  max_byz=0.0185  max_hon=0.0185
+           |S_t|=54  byz_in_S_t=23  hon_in_S_t=31  mode=naive_A
+[round  195] acc=0.7769  loss=0.7285  sum_byz=0.4222  max_byz=0.0222  max_hon=0.0222
+           |S_t|=57  byz_in_S_t=22  hon_in_S_t=35  mode=naive_A
+[round  200] acc=0.7870  loss=0.7132  [FINAL]
+
+Metrics → /tmp/step2hz_p0.25_f0.4/metrics.csv
+Weights  → /tmp/step2hz_p0.25_f0.4/weights.npy  shape=(201, 200)
+
+  A-bd-p0.25-f0.4-STRESS acc trajectory:
+    round  60: acc = 0.5537, loss = 1.2598
+    round 100: acc = 0.6121, loss = 1.0469
+    round 150: acc = 0.7146, loss = 0.8548
+    round 200: acc = 0.7870, loss = 0.7132
+
+================================================================================
+SUMMARY — Step 2 full-horizon (naive_A, backdoor, 200 rounds)
+================================================================================
+label                             p   frac    acc60   acc100   acc150   acc200
+A-bd-p1.0-f0.1                  1.0    0.1   0.7583   0.8197   0.8538   0.8715
+A-bd-p0.5-f0.1                  0.5    0.1   0.8018   0.8493   0.8743   0.8849
+A-bd-p0.25-f0.1                0.25    0.1   0.7994   0.8450   0.8715   0.8820
+A-bd-p0.25-f0.4-STRESS         0.25    0.4   0.5537   0.6121   0.7146   0.7870
+
+DONE
