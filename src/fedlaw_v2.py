@@ -390,8 +390,8 @@ class FedLAWV2Trainer:
                     acc, loss = self._eval()
                     writer.writerow([k, f"{acc:.6f}", f"{loss:.6f}"])
                     fh.flush()
-                    sum_byz = float(sum(self.w[i] for i in self.byz_indices))
-                    max_byz = float(max(self.w[i] for i in self.byz_indices))
+                    sum_byz = float(sum(self.w[i] for i in self.byz_indices)) if self.byz_indices else 0.0
+                    max_byz = float(max(self.w[i] for i in self.byz_indices)) if self.byz_indices else 0.0
                     max_hon = float(max(self.w[i] for i in self.honest_indices))
                     print(f"[round {k:4d}] acc={acc:.4f}  loss={loss:.4f}"
                           f"  sum_byz={sum_byz:.4f}  max_byz={max_byz:.4f}"
