@@ -42,6 +42,13 @@ def main() -> None:
     p.add_argument("--p", type=float, default=None,
                    dest="participation_p",
                    help="Bernoulli-p client participation (default 1.0 = full)")
+    p.add_argument("--participation-mode", default=None,
+                   dest="participation_mode",
+                   choices=["naive_A", "cache_weight_B_i"],
+                   help="Behaviour for absent clients (only used when p<1.0). "
+                        "naive_A = no weight persistence (control). "
+                        "cache_weight_B_i = persist w_i across absences "
+                        "(§2.4 Option (i), dormancy possible).")
     args = p.parse_args()
 
     overrides = {
@@ -52,6 +59,7 @@ def main() -> None:
         "frac_malicious": args.frac_malicious,
         "lie_tau": args.lie_tau,
         "p": args.participation_p,
+        "participation_mode": args.participation_mode,
     }
     cfg = _load_config(args.config, overrides)
 
