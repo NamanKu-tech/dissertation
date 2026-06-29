@@ -449,69 +449,80 @@ class FedLAWV2Trainer:
 
                     if len(S_t) == 0:
                         theta_new = theta_k     # nobody participated; skip
-                    else:
+                    elif cfg.participation_mode == "naive_A":
+                        # Design A — control. Project over S_t with fresh
+                        # uniform w_active. No carry-over: self.w is wiped
+                        # outside S_t at write-back so the next round must
+                        # re-initialise from uniform regardless.
                         n_hon_St = int(sum(
                             1 for idx in S_t if int(idx) not in byz_set))
-
-                        # This round's projection geometry — sized to |S_t|
                         s_t = max(n_hon_St, 1)
                         slack_t = min(10, max(s_t - 2, 0))
                         cap_t = 1.0 / max(s_t - slack_t, 1)
                         if s_t * cap_t < 1.0 - 1e-9:
                             cap_t = 1.0 / s_t
 
-                        G_St = G[S_t]                                   # (|S_t|, d)
-
-                        # ── §2.4 fork: how is w_active initialised? ─────────
-                        if cfg.participation_mode == "naive_A":
-                            # Design A — control. Fresh uniform each round.
-                            # No persistence: ignore self.w entirely on read.
-                            w_active = np.ones(len(S_t), dtype=np.float64) / len(S_t)
-                        elif cfg.participation_mode == "cache_weight_B_i":
-                            # Design B variant — §2.4 Option (i).
-                            # Cache weight only (not gradient). Pull persisted
-                            # self.w[S_t] and renormalise to a simplex over S_t.
-                            # Absent clients keep their w_i for the next time
-                            # they reappear — but the detector cannot re-score
-                            # them (no cached gradient), so dormancy is possible.
-                            w_active = self.w[S_t].astype(np.float64).copy()
-                            s_sum = float(w_active.sum())
-                            if s_sum > 1e-12:
-                                w_active /= s_sum
-                            else:
-                                w_active[:] = 1.0 / len(S_t)
-                        else:
-                            raise ValueError(
-                                f"Unknown participation_mode: "
-                                f"{cfg.participation_mode!r}. "
-                                f"Valid: 'naive_A', 'cache_weight_B_i'.")
+                        G_St = G[S_t]
+                        w_active = np.ones(len(S_t), dtype=np.float64) / len(S_t)
 
                         if k < cfg.w_freeze_rounds and n_hon_St > 0:
                             theta_tilde = theta_k - cfg.alpha * (G_St.T @ w_active)
                             G_tilde, f_tilde = self._collect(theta_tilde, round_k=k)
                             G_tilde, _ = _clip_gradients(G_tilde, self.honest_indices)
-                            G_tilde_St = G_tilde[S_t]
-                            f_tilde_St = f_tilde[S_t]
-
-                            cross = G_St @ G_tilde_St.T
+                            cross = G_St @ G_tilde[S_t].T
                             h = (w_active
                                  + cfg.alpha * cfg.beta * (cross @ w_active)
-                                 - cfg.beta * f_tilde_St)
+                                 - cfg.beta * f_tilde[S_t])
                             w_active = project_sparse_capped_simplex(
                                 h, s=s_t, t=cap_t)
 
-                        # Write-back depends on mode (§2.4 fork, continued).
-                        if cfg.participation_mode == "cache_weight_B_i":
-                            # Persist for next round — that's the cache.
-                            self.w[S_t] = w_active
-                        else:  # naive_A
-                            # Reflect this round's allocation for diagnostics
-                            # (absent → 0, present → w_active), but the next
-                            # round's w_active will re-initialise from uniform
-                            # regardless — no carry-over influences projection.
-                            self.w[:] = 0.0
-                            self.w[S_t] = w_active
+                        self.w[:] = 0.0
+                        self.w[S_t] = w_active
                         theta_new = theta_k - cfg.alpha * (G_St.T @ w_active)
+
+                    elif cfg.participation_mode == "cache_weight_B_i":
+                        # Design B canonical (§2.2) + §2.4 Option (i):
+                        # cache WEIGHT for absent clients (their w_i persists in
+                        # self.w), do NOT cache gradient (absent g_i := 0 → no
+                        # cross-product contribution, no re-scoring → dormancy
+                        # possible). Critically: project over ALL n clients each
+                        # round so self.w is a valid simplex (Σ = 1) at the
+                        # full-n scale s=n_honest, t=1/(s-10). Absent clients
+                        # appear in h as their previous w_i unchanged; active
+                        # clients get the standard FedLAW update.
+                        G_St = G[S_t]
+                        s_full = self.sparsity
+                        cap_full = self.cap
+
+                        if k < cfg.w_freeze_rounds:
+                            theta_tilde = theta_k - cfg.alpha * (G_St.T @ self.w[S_t])
+                            G_tilde, f_tilde = self._collect(theta_tilde, round_k=k)
+                            G_tilde, _ = _clip_gradients(G_tilde, self.honest_indices)
+
+                            # cross over full n with absent g_i = 0 simplifies:
+                            #   (cross_full @ self.w)[active] = cross_St @ self.w[S_t]
+                            #   (cross_full @ self.w)[absent] = 0
+                            cross_St = G_St @ G_tilde[S_t].T
+                            cross_term = np.zeros(cfg.n_clients, dtype=np.float64)
+                            cross_term[S_t] = cross_St @ self.w[S_t]
+                            f_tilde_full = np.zeros(cfg.n_clients, dtype=np.float64)
+                            f_tilde_full[S_t] = f_tilde[S_t]
+
+                            h = (self.w
+                                 + cfg.alpha * cfg.beta * cross_term
+                                 - cfg.beta * f_tilde_full)
+                            self.w = project_sparse_capped_simplex(
+                                h, s=s_full, t=cap_full)
+
+                        # Model update: absent contribute 0 (cached g_i=0), so
+                        # θ - α G_full^T self.w  =  θ - α G_St^T self.w[S_t].
+                        theta_new = theta_k - cfg.alpha * (G_St.T @ self.w[S_t])
+
+                    else:
+                        raise ValueError(
+                            f"Unknown participation_mode: "
+                            f"{cfg.participation_mode!r}. "
+                            f"Valid: 'naive_A', 'cache_weight_B_i'.")
 
                 self._set_global_flat(theta_new)
                 weight_history.append(self.w.copy())
