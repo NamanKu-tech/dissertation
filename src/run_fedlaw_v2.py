@@ -52,6 +52,23 @@ def main() -> None:
                         "cache_grad_B_ii = persist w_i + cached g_i with "
                         "DeMoA decay (§2.4 Option (ii), canonical §2.2 B, "
                         "absent re-scored by detector, may defeat dormancy).")
+    p.add_argument("--dormancy-T-dark", type=int, default=None,
+                   dest="dormancy_T_dark",
+                   help="Round at which the dormant client goes dark "
+                        "(§3 attack). -1 = no dormancy. Combine with "
+                        "--dormancy-client-idx.")
+    p.add_argument("--dormancy-client-idx", type=int, default=None,
+                   dest="dormancy_client_idx",
+                   help="Index of the dormant client (§3 attack). -1 = none.")
+    p.add_argument("--dormancy-payload", default=None,
+                   dest="dormancy_payload",
+                   choices=["inverse_mean", "stealth_lie", "stealth_honest"],
+                   help="Payload cached at T_dark-1. inverse_mean = anti-aligned "
+                        "(control). stealth_lie = μ + τ·σ (default). "
+                        "stealth_honest = leave honest unchanged.")
+    p.add_argument("--dormancy-lie-tau", type=float, default=None,
+                   dest="dormancy_lie_tau",
+                   help="τ for stealth_lie payload (default 0.9346 = Baruch z).")
     args = p.parse_args()
 
     overrides = {
@@ -63,6 +80,10 @@ def main() -> None:
         "lie_tau": args.lie_tau,
         "p": args.participation_p,
         "participation_mode": args.participation_mode,
+        "dormancy_T_dark": args.dormancy_T_dark,
+        "dormancy_client_idx": args.dormancy_client_idx,
+        "dormancy_payload": args.dormancy_payload,
+        "dormancy_lie_tau": args.dormancy_lie_tau,
     }
     cfg = _load_config(args.config, overrides)
 

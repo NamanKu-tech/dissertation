@@ -84,6 +84,32 @@ class FedLAWV2Config:
     #              MAY be defeated by re-scoring (the opposite of Option i).
     #              This is canonical Design B from §2.2 of the design doc.
     participation_mode: str = "naive_A"
+    # Dormancy attack (§3 of PARTIAL_PARTICIPATION_DESIGN.md).
+    # If dormancy_T_dark > 0 and dormancy_client_idx >= 0:
+    #   rounds [0, T_dark) — dormant client is FORCED into S_t each round
+    #     (builds trust by submitting honest pseudo-gradients).
+    #   round  T_dark − 1  — dormant client's submitted G and G_tilde are
+    #     replaced with  −mean(other_honest)  (the poison that gets cached).
+    #   rounds [T_dark, T) — dormant client is FORCED out of S_t every round
+    #     (it has "gone dark"; its cached poisoned gradient persists under
+    #     cache_grad_B_ii with DeMoA decay; absent under naive_A → no payload).
+    dormancy_T_dark: int = -1
+    dormancy_client_idx: int = -1
+    # Dormancy payload — what gets cached at round T_dark − 1.
+    #   "inverse_mean" — −mean(other_honest). Anti-aligned (cos ≈ −0.99);
+    #                     trivially caught by re-scoring. Use as control.
+    #   "stealth_lie"  — mean(other_honest) + τ·std(other_honest). LIE-style:
+    #                     mostly aligned (cos ≈ +0.5), positive cross-product,
+    #                     evades sharp anti-alignment detection. The genuine
+    #                     stealthy dormancy payload.
+    #   "stealth_honest" — leave dormant's actual honest gradient unchanged.
+    #                     Cached value is HONEST when stored; the "attack" is
+    #                     the staleness — does the honest-when-cached gradient
+    #                     get re-scored as the model moves past it?
+    dormancy_payload: str = "stealth_lie"
+    # LIE τ for stealth_lie payload (Baruch stealth bound; matches our LIE
+    # reproduction work, results/paper_fixes/REPORT.md §"LIE Check 1+2").
+    dormancy_lie_tau: float = 0.9346
     # Output
     seed: int = 0
     results_dir: str = "./results/v2"
@@ -402,6 +428,17 @@ class FedLAWV2Trainer:
         # fast path is byte-exact equivalent to the original trainer).
         sampling_rng = np.random.default_rng(cfg.seed + 0xBEEF)
         byz_set = set(self.byz_indices)
+        # Dormancy attack state
+        dormant = cfg.dormancy_client_idx
+        T_dark = cfg.dormancy_T_dark
+        dormancy_on = dormant >= 0 and T_dark > 0
+        if dormancy_on:
+            dormancy_csv = os.path.join(cfg.results_dir, "dormancy_diag.csv")
+            dfh = open(dormancy_csv, "w", newline="")
+            dwriter = csv.writer(dfh)
+            dwriter.writerow(["round", "w_dormant", "norm_cached_g",
+                              "cos_cached_vs_honest_mean", "in_S_t",
+                              "decay_factor_this_round"])
 
         with open(csv_path, "w", newline="") as fh:
             writer = csv.writer(fh)
@@ -447,6 +484,32 @@ class FedLAWV2Trainer:
                     # cfg.participation_mode — see config docstring.
                     mask = sampling_rng.random(cfg.n_clients) < cfg.p
                     S_t = np.where(mask)[0]
+                    # Dormancy attack override on S_t (§3).
+                    if dormancy_on:
+                        if k < T_dark:
+                            if dormant not in set(int(i) for i in S_t):
+                                S_t = np.sort(np.append(S_t, dormant))
+                        else:
+                            S_t = S_t[S_t != dormant]
+                    # Dormancy attack — poison the dormant client's Round-A
+                    # pseudo-gradient on the last build-trust round so the
+                    # poisoned value gets cached. Branch on payload:
+                    if dormancy_on and k == T_dark - 1:
+                        other_hon = np.array(
+                            [i for i in range(cfg.n_clients) if i != dormant],
+                            dtype=int)
+                        if cfg.dormancy_payload == "inverse_mean":
+                            G[dormant] = -G[other_hon].mean(axis=0)
+                        elif cfg.dormancy_payload == "stealth_lie":
+                            mu = G[other_hon].mean(axis=0)
+                            sigma = G[other_hon].std(axis=0, ddof=1)
+                            G[dormant] = mu + cfg.dormancy_lie_tau * sigma
+                        elif cfg.dormancy_payload == "stealth_honest":
+                            pass  # leave G[dormant] as the client's honest g
+                        else:
+                            raise ValueError(
+                                f"Unknown dormancy_payload: "
+                                f"{cfg.dormancy_payload!r}")
                     if k % cfg.eval_every == 0:
                         n_byz_St = int(sum(1 for i in S_t if int(i) in byz_set))
                         print(f"           |S_t|={len(S_t)}  byz_in_S_t={n_byz_St}  "
@@ -563,6 +626,22 @@ class FedLAWV2Trainer:
                             G_tilde, f_tilde = self._collect(theta_tilde, round_k=k)
                             G_tilde, _ = _clip_gradients(G_tilde, self.honest_indices)
 
+                            # Dormancy Round-B poisoning — mirror Round-A's
+                            # payload choice so the cached G_tilde stays
+                            # internally consistent with the cached G.
+                            if dormancy_on and k == T_dark - 1:
+                                other_hon = np.array(
+                                    [i for i in range(cfg.n_clients) if i != dormant],
+                                    dtype=int)
+                                if cfg.dormancy_payload == "inverse_mean":
+                                    G_tilde[dormant] = -G_tilde[other_hon].mean(axis=0)
+                                elif cfg.dormancy_payload == "stealth_lie":
+                                    mu = G_tilde[other_hon].mean(axis=0)
+                                    sigma = G_tilde[other_hon].std(axis=0, ddof=1)
+                                    G_tilde[dormant] = mu + cfg.dormancy_lie_tau * sigma
+                                elif cfg.dormancy_payload == "stealth_honest":
+                                    pass
+
                             G_tilde_full = G_tilde.copy()
                             G_tilde_full[absent_mask] = self._G_tilde_cache[absent_mask]
                             f_tilde_full = f_tilde.copy()
@@ -602,6 +681,36 @@ class FedLAWV2Trainer:
                 self._set_global_flat(theta_new)
                 weight_history.append(self.w.copy())
 
+                # ── Dormancy diagnostic (per round) ──────────────────────────
+                if dormancy_on:
+                    in_S_t_now = bool(cfg.p >= 1.0 or (dormant in set(int(i) for i in S_t)))
+                    norm_cached = 0.0
+                    cos_cached = 0.0
+                    decay_this = 1.0 - cfg.alpha * cfg.p if cfg.p < 1.0 else 1.0
+                    if (cfg.participation_mode == "cache_grad_B_ii"
+                            and hasattr(self, "_G_cache") and self._G_cache is not None):
+                        cached_g = self._G_cache[dormant]
+                        norm_cached = float(np.linalg.norm(cached_g))
+                        # Honest consensus = mean of fresh G over honest active
+                        # this round. For dormant comparison we use the same G
+                        # collected at theta_k earlier in the iteration.
+                        if cfg.p < 1.0 and len(S_t) > 0:
+                            hon_active = np.array(
+                                [i for i in S_t if int(i) != dormant
+                                 and int(i) not in byz_set], dtype=int)
+                            if len(hon_active) > 0:
+                                hon_mean = G[hon_active].mean(axis=0)
+                                nm = float(np.linalg.norm(hon_mean))
+                                if norm_cached > 1e-12 and nm > 1e-12:
+                                    cos_cached = float(
+                                        np.dot(cached_g, hon_mean) / (norm_cached * nm))
+                    dwriter.writerow([k, f"{float(self.w[dormant]):.6f}",
+                                      f"{norm_cached:.6f}",
+                                      f"{cos_cached:+.6f}",
+                                      int(in_S_t_now),
+                                      f"{decay_this:.6f}"])
+                    dfh.flush()
+
             # ── final eval ───────────────────────────────────────────────────
             acc, loss = self._eval()
             sum_byz = float(sum(self.w[i] for i in self.byz_indices)) if self.byz_indices else 0.0
@@ -613,3 +722,6 @@ class FedLAWV2Trainer:
         np.save(weights_path, W)
         print(f"\nMetrics → {csv_path}")
         print(f"Weights  → {weights_path}  shape={W.shape}")
+        if dormancy_on:
+            dfh.close()
+            print(f"Dormancy → {dormancy_csv}")
