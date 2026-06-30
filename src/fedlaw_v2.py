@@ -70,13 +70,19 @@ class FedLAWV2Config:
     #              over S_t. Absent client's w_i is NOT persisted; no
     #              carry-over between rounds. Loses weight continuity by
     #              construction. This is what should degrade — see §2.1.
-    #   "cache_weight_B_i" — Design B variant, §2.4 Option (i). Persist w_i
-    #              for absent clients across rounds (caching the WEIGHT only,
-    #              NOT the gradient). On re-entry, the cached w_i is
-    #              renormalised into the active simplex over S_t. The
-    #              detector cannot re-score an absent client because its
-    #              gradient is not cached — so dormancy is POSSIBLE here.
-    #              This is the §2.4 crux decision, surfaced and explicit.
+    #   "cache_weight_B_i" — Design B, §2.4 Option (i). Cache WEIGHT only.
+    #              Absent g_i := 0 (no contribution to cross-product or model
+    #              update). Detector CANNOT re-score absent clients → dormancy
+    #              is structurally possible. Empirically under-trains because
+    #              absent clients hold weight mass with zero contribution
+    #              (~10x effective step throttle at p=0.1).
+    #   "cache_grad_B_ii" — Design B, §2.4 Option (ii). Cache GRADIENT and
+    #              weight. Absent g_i := cached × (1-αp)^τ_i (DeMoA's staleness
+    #              decay, §A.1). Absent clients contribute to BOTH the model
+    #              update (no stranded weight) AND the cross-product detector
+    #              (their cached gradient is re-scored every round) → dormancy
+    #              MAY be defeated by re-scoring (the opposite of Option i).
+    #              This is canonical Design B from §2.2 of the design doc.
     participation_mode: str = "naive_A"
     # Output
     seed: int = 0
@@ -518,11 +524,80 @@ class FedLAWV2Trainer:
                         # θ - α G_full^T self.w  =  θ - α G_St^T self.w[S_t].
                         theta_new = theta_k - cfg.alpha * (G_St.T @ self.w[S_t])
 
+                    elif cfg.participation_mode == "cache_grad_B_ii":
+                        # Design B canonical (§2.2) + §2.4 Option (ii):
+                        # cache GRADIENT and weight. Absent g_i := cached × decay
+                        # (DeMoA staleness decay (1-αp)^τ_i, §A.1). Absent
+                        # contributes to BOTH the cross-product detector and
+                        # the model update — no stranded weight. Dormancy may
+                        # be defeated because the detector re-scores absent
+                        # clients via their (decaying) cached gradient.
+                        s_full = self.sparsity
+                        cap_full = self.cap
+                        decay = 1.0 - cfg.alpha * cfg.p
+
+                        # Lazy-init caches with the correct d.
+                        if not hasattr(self, "_G_cache") or self._G_cache is None:
+                            d = G.shape[1]
+                            self._G_cache = np.zeros((cfg.n_clients, d), dtype=np.float64)
+                            self._G_tilde_cache = np.zeros((cfg.n_clients, d), dtype=np.float64)
+                            self._f_tilde_cache = np.zeros(cfg.n_clients, dtype=np.float64)
+
+                        # Apply per-round decay to all cached entries. Active
+                        # clients will overwrite below — so effective decay
+                        # accumulates only for absent clients (=(1-αp)^τ_i).
+                        self._G_cache *= decay
+                        self._G_tilde_cache *= decay
+                        self._f_tilde_cache *= decay
+
+                        # Build effective full-n G: fresh for active, decayed
+                        # cached for absent.
+                        absent_mask = np.ones(cfg.n_clients, dtype=bool)
+                        absent_mask[S_t] = False
+                        G_full = G.copy()
+                        G_full[absent_mask] = self._G_cache[absent_mask]
+
+                        if k < cfg.w_freeze_rounds:
+                            # Tentative step uses the full effective G.
+                            theta_tilde = theta_k - cfg.alpha * (G_full.T @ self.w)
+                            G_tilde, f_tilde = self._collect(theta_tilde, round_k=k)
+                            G_tilde, _ = _clip_gradients(G_tilde, self.honest_indices)
+
+                            G_tilde_full = G_tilde.copy()
+                            G_tilde_full[absent_mask] = self._G_tilde_cache[absent_mask]
+                            f_tilde_full = f_tilde.copy()
+                            f_tilde_full[absent_mask] = self._f_tilde_cache[absent_mask]
+
+                            # Cross-product over full n — absent clients are
+                            # re-scored via their (decayed) cached pair.
+                            cross = G_full @ G_tilde_full.T
+                            h = (self.w
+                                 + cfg.alpha * cfg.beta * (cross @ self.w)
+                                 - cfg.beta * f_tilde_full)
+                            self.w = project_sparse_capped_simplex(
+                                h, s=s_full, t=cap_full)
+
+                            # Refresh cache for active clients (overwrites the
+                            # decayed values from this round's pre-decay step).
+                            self._G_cache[S_t] = G[S_t]
+                            self._G_tilde_cache[S_t] = G_tilde[S_t]
+                            self._f_tilde_cache[S_t] = f_tilde[S_t]
+                        else:
+                            # w-freeze: weights stable, but still refresh
+                            # gradient cache so model update uses fresh active.
+                            self._G_cache[S_t] = G[S_t]
+
+                        # Model update uses full effective G — absent now
+                        # contribute (decayed cached g_i) × w_i. No stranded
+                        # weight at any p.
+                        theta_new = theta_k - cfg.alpha * (G_full.T @ self.w)
+
                     else:
                         raise ValueError(
                             f"Unknown participation_mode: "
                             f"{cfg.participation_mode!r}. "
-                            f"Valid: 'naive_A', 'cache_weight_B_i'.")
+                            f"Valid: 'naive_A', 'cache_weight_B_i', "
+                            f"'cache_grad_B_ii'.")
 
                 self._set_global_flat(theta_new)
                 weight_history.append(self.w.copy())

@@ -44,11 +44,14 @@ def main() -> None:
                    help="Bernoulli-p client participation (default 1.0 = full)")
     p.add_argument("--participation-mode", default=None,
                    dest="participation_mode",
-                   choices=["naive_A", "cache_weight_B_i"],
+                   choices=["naive_A", "cache_weight_B_i", "cache_grad_B_ii"],
                    help="Behaviour for absent clients (only used when p<1.0). "
                         "naive_A = no weight persistence (control). "
-                        "cache_weight_B_i = persist w_i across absences "
-                        "(§2.4 Option (i), dormancy possible).")
+                        "cache_weight_B_i = persist w_i, absent g_i=0 "
+                        "(§2.4 Option (i), under-trains, dormancy possible). "
+                        "cache_grad_B_ii = persist w_i + cached g_i with "
+                        "DeMoA decay (§2.4 Option (ii), canonical §2.2 B, "
+                        "absent re-scored by detector, may defeat dormancy).")
     args = p.parse_args()
 
     overrides = {

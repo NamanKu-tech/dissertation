@@ -1,6 +1,6 @@
 #!/bin/bash
 # DeMoA-protocol partial-participation comparison.
-# Fix p per experiment, compare naive_A vs cache_weight_B_i within each p.
+# Fix p per experiment, compare naive_A vs cache_grad_B_ii within each p.
 # Sequential, single-process, seed=0 only (multi-seed flagged pending).
 set -e
 cd "$(dirname "$0")/.."
@@ -38,7 +38,7 @@ run_one() {
 # 2 fracs × 2 p × 2 modes
 for p in 0.5 0.1; do
   for frac in 0.1 0.4; do
-    for mode in naive_A cache_weight_B_i; do
+    for mode in naive_A cache_grad_B_ii; do
       run_one "$p" "$frac" "$mode"
     done
   done
