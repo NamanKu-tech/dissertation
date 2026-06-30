@@ -1,0 +1,22 @@
+Stealthy dormancy batch started Tue Jun 30 14:58:25 IST 2026
+6 runs × 200 rounds × ~35 min = ~3.5h total.
+
+=== START: clean_B Tue Jun 30 14:58:25 IST 2026 ===
+DONE: clean_B → 200,0.905700,0.329547,0.000000 Tue Jun 30 15:28:20 IST 2026
+
+=== START: dorm_B_lie_T20 Tue Jun 30 15:28:20 IST 2026 ===
+DONE: dorm_B_lie_T20 → 200,0.905500,0.330031,0.000000 Tue Jun 30 15:59:53 IST 2026
+
+=== START: dorm_B_lie_T50 Tue Jun 30 15:59:53 IST 2026 ===
+DONE: dorm_B_lie_T50 → 200,0.905800,0.329931,0.000000 Tue Jun 30 16:55:07 IST 2026
+
+=== START: dorm_B_honest_T20 Tue Jun 30 16:55:07 IST 2026 ===
+DONE: dorm_B_honest_T20 → 200,0.905700,0.329792,0.000000 Tue Jun 30 17:21:54 IST 2026
+
+=== START: dorm_A_lie_T20 Tue Jun 30 17:21:54 IST 2026 ===
+DONE: dorm_A_lie_T20 → 200,0.908100,0.319525,0.000000 Tue Jun 30 17:48:13 IST 2026
+
+=== START: dorm_A_lie_T50 Tue Jun 30 17:48:13 IST 2026 ===
+DONE: dorm_A_lie_T50 → 200,0.908100,0.319459,0.000000 Tue Jun 30 18:15:15 IST 2026
+
+ALL 6 RUNS DONE Tue Jun 30 18:15:15 IST 2026
