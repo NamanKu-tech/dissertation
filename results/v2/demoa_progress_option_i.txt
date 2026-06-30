@@ -1,0 +1,28 @@
+DeMoA-protocol batch started Mon Jun 29 17:20:35 IST 2026
+8 runs × 200 rounds × ~35 min = ~5h total. Sequential.
+
+=== START: p0.5_f0.1_naive_A Mon Jun 29 17:20:35 IST 2026 ===
+DONE: p0.5_f0.1_naive_A → 200,0.884700,0.402712,0.105769 Mon Jun 29 17:49:38 IST 2026
+
+=== START: p0.5_f0.1_cache_weight_B_i Mon Jun 29 17:49:38 IST 2026 ===
+DONE: p0.5_f0.1_cache_weight_B_i → 200,0.839000,0.554985,0.087051 Mon Jun 29 18:21:05 IST 2026
+
+=== START: p0.5_f0.4_naive_A Mon Jun 29 18:21:05 IST 2026 ===
+DONE: p0.5_f0.4_naive_A → 200,0.787300,0.710001,0.413462 Mon Jun 29 18:50:18 IST 2026
+
+=== START: p0.5_f0.4_cache_weight_B_i Mon Jun 29 18:50:18 IST 2026 ===
+DONE: p0.5_f0.4_cache_weight_B_i → 200,0.656900,0.978342,0.296245 Mon Jun 29 19:19:54 IST 2026
+
+=== START: p0.1_f0.1_naive_A Mon Jun 29 19:19:54 IST 2026 ===
+DONE: p0.1_f0.1_naive_A → 200,0.882200,0.409368,0.000000 Mon Jun 29 19:49:33 IST 2026
+
+=== START: p0.1_f0.1_cache_weight_B_i Mon Jun 29 19:49:33 IST 2026 ===
+DONE: p0.1_f0.1_cache_weight_B_i → 200,0.666500,1.456877,0.117647 Mon Jun 29 20:19:52 IST 2026
+
+=== START: p0.1_f0.4_naive_A Mon Jun 29 20:19:52 IST 2026 ===
+DONE: p0.1_f0.4_naive_A → 200,0.788400,0.715552,0.352941 Mon Jun 29 20:52:22 IST 2026
+
+=== START: p0.1_f0.4_cache_weight_B_i Mon Jun 29 20:52:22 IST 2026 ===
+DONE: p0.1_f0.4_cache_weight_B_i → 200,0.455900,1.791584,0.414008 Mon Jun 29 21:27:26 IST 2026
+
+ALL 8 RUNS DONE Mon Jun 29 21:27:26 IST 2026

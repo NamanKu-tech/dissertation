@@ -4,7 +4,7 @@ Reads results/v2/demoa/<label>/metrics.csv and produces:
   results/v2/demoa/plots/comparison_p0.5.png — 2x2 grid (frac × {acc, sum_byz})
   results/v2/demoa/plots/comparison_p0.1.png — same layout
 
-Each subplot has 2 lines: naive_A vs cache_weight_B_i.
+Each subplot has 2 lines: naive_A vs cache_grad_B_ii.
 Conforms to DeMoA's "fix p, compare methods within p" protocol.
 """
 from __future__ import annotations
@@ -40,13 +40,13 @@ def load_traj(p: float, frac: float, mode: str):
 
 def plot_p(p: float):
     fig, axes = plt.subplots(2, 2, figsize=(14, 9))
-    fig.suptitle(f"Partial participation, p = {p}: naive_A vs cache_weight_B_i\n"
+    fig.suptitle(f"Partial participation, p = {p}: naive_A vs cache_grad_B_ii\n"
                  f"n=200, q=0.9, backdoor, seed=0",
                  fontsize=13)
 
     for col, frac in enumerate([0.1, 0.4]):
         for mode, color, ls in [("naive_A",            "tab:blue",  "-"),
-                                ("cache_weight_B_i",   "tab:orange", "-")]:
+                                ("cache_grad_B_ii",   "tab:orange", "-")]:
             tr = load_traj(p, frac, mode)
             if tr is None:
                 continue
