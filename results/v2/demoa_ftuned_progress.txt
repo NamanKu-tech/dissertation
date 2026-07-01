@@ -1,0 +1,10 @@
+DeMoA f-tuned batch started Wed Jul  1 15:33:54 IST 2026
+2 runs × 200 rounds × ~15 min = ~30 min total. f=80.
+
+=== START: clean_TrMean_DeMoA_f80 Wed Jul  1 15:33:54 IST 2026 ===
+DONE: clean_TrMean_DeMoA_f80 → 200,0.890300,0.410576 Wed Jul  1 15:50:09 IST 2026
+
+=== START: dorm_TrMean_DeMoA_f80_c80_T20 Wed Jul  1 15:50:09 IST 2026 ===
+DONE: dorm_TrMean_DeMoA_f80_c80_T20 → 200,0.639700,1.147146 Wed Jul  1 16:03:32 IST 2026
+
+ALL 2 RUNS DONE Wed Jul  1 16:03:32 IST 2026

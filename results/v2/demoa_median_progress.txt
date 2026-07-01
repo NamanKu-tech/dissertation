@@ -1,0 +1,8 @@
+DeMoA + Median batch started Wed Jul  1 16:06:28 IST 2026
+
+=== START: clean_Median_DeMoA Wed Jul  1 16:06:28 IST 2026 ===
+DONE: clean_Median_DeMoA → 200,0.889800,0.414334 Wed Jul  1 16:21:45 IST 2026
+
+=== START: dorm_Median_DeMoA_c80_T20 Wed Jul  1 16:21:45 IST 2026 ===
+DONE: dorm_Median_DeMoA_c80_T20 → 200,0.600300,1.239774 Wed Jul  1 16:32:27 IST 2026
+ALL 2 RUNS DONE Wed Jul  1 16:32:27 IST 2026

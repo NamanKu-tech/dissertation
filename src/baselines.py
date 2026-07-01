@@ -24,7 +24,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from byzfl import Client, Server
-from byzfl.aggregators.aggregators import Krum, TrMean
+from byzfl.aggregators.aggregators import Krum, TrMean, Median
 import src.models   # registers mlp3_mnist
 from src.data_partition import cao_partition, select_malicious_indices
 from src.fedlaw_v2 import _MNIST_TFM   # reuse the transform
@@ -114,6 +114,8 @@ class BaselineTrainer:
             self.agg = Krum(f=cfg.aggregator_f)
         elif cfg.aggregator == "trmean":
             self.agg = TrMean(f=cfg.aggregator_f)
+        elif cfg.aggregator == "median":
+            self.agg = Median()   # Median doesn't take f — always picks middle
         else:
             raise ValueError(f"Unknown aggregator: {cfg.aggregator!r}")
 
