@@ -1,0 +1,13 @@
+Baselines batch started Wed Jul  1 10:40:45 IST 2026
+3 runs × 200 rounds × ~25 min = ~1.25h total.
+
+=== START: clean_TrMean_DeMoA Wed Jul  1 10:40:45 IST 2026 ===
+DONE: clean_TrMean_DeMoA → 200,0.897200,0.375902 Wed Jul  1 10:55:54 IST 2026
+
+=== START: dorm_TrMean_DeMoA_c80_T20 Wed Jul  1 10:55:54 IST 2026 ===
+DONE: dorm_TrMean_DeMoA_c80_T20 → 200,0.781400,0.741311 Wed Jul  1 11:07:33 IST 2026
+
+=== START: dorm_TrMean_naive_c80_T20 Wed Jul  1 11:07:33 IST 2026 ===
+DONE: dorm_TrMean_naive_c80_T20 → 200,0.878700,0.421976 Wed Jul  1 11:17:40 IST 2026
+
+ALL 3 RUNS DONE Wed Jul  1 11:17:40 IST 2026
