@@ -59,7 +59,12 @@ def main() -> None:
                         "--dormancy-client-idx.")
     p.add_argument("--dormancy-client-idx", type=int, default=None,
                    dest="dormancy_client_idx",
-                   help="Index of the dormant client (§3 attack). -1 = none.")
+                   help="Index of the dormant client (§3 attack, singleton). "
+                        "-1 = none. Ignored if --dormancy-client-indices given.")
+    p.add_argument("--dormancy-client-indices", default=None,
+                   dest="dormancy_client_indices",
+                   help="Comma-separated list of dormant client indices "
+                        "(§3 coordinated cohort attack).")
     p.add_argument("--dormancy-payload", default=None,
                    dest="dormancy_payload",
                    choices=["inverse_mean", "stealth_lie", "stealth_honest"],
@@ -84,6 +89,9 @@ def main() -> None:
         "dormancy_client_idx": args.dormancy_client_idx,
         "dormancy_payload": args.dormancy_payload,
         "dormancy_lie_tau": args.dormancy_lie_tau,
+        "dormancy_client_indices": (
+            [int(x) for x in args.dormancy_client_indices.split(",")]
+            if args.dormancy_client_indices else None),
     }
     cfg = _load_config(args.config, overrides)
 

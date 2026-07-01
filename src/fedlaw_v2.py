@@ -17,7 +17,7 @@ from __future__ import annotations
 import csv
 import os
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 import torch
@@ -95,6 +95,12 @@ class FedLAWV2Config:
     #     cache_grad_B_ii with DeMoA decay; absent under naive_A → no payload).
     dormancy_T_dark: int = -1
     dormancy_client_idx: int = -1
+    # For coordinated multi-client dormancy: an entire cohort goes dark
+    # together after building trust. All cached gradients are set to the
+    # SAME poison vector so they sum constructively (not cancelling like
+    # the reproduction's group-oriented Byzantine gradients did at f=0.4).
+    # If non-empty, this overrides dormancy_client_idx.
+    dormancy_client_indices: list = field(default_factory=list)
     # Dormancy payload — what gets cached at round T_dark − 1.
     #   "inverse_mean" — −mean(other_honest). Anti-aligned (cos ≈ −0.99);
     #                     trivially caught by re-scoring. Use as control.
@@ -428,16 +434,28 @@ class FedLAWV2Trainer:
         # fast path is byte-exact equivalent to the original trainer).
         sampling_rng = np.random.default_rng(cfg.seed + 0xBEEF)
         byz_set = set(self.byz_indices)
-        # Dormancy attack state
-        dormant = cfg.dormancy_client_idx
+        # Dormancy attack state — cohort-first. Backward-compat: if the
+        # list is empty and the singleton idx is set, treat as a 1-element cohort.
         T_dark = cfg.dormancy_T_dark
-        dormancy_on = dormant >= 0 and T_dark > 0
+        if cfg.dormancy_client_indices:
+            dormant_cohort = list(cfg.dormancy_client_indices)
+        elif cfg.dormancy_client_idx >= 0:
+            dormant_cohort = [cfg.dormancy_client_idx]
+        else:
+            dormant_cohort = []
+        dormant_set = set(dormant_cohort)
+        dormancy_on = len(dormant_cohort) > 0 and T_dark > 0
         if dormancy_on:
             dormancy_csv = os.path.join(cfg.results_dir, "dormancy_diag.csv")
             dfh = open(dormancy_csv, "w", newline="")
             dwriter = csv.writer(dfh)
-            dwriter.writerow(["round", "w_dormant", "norm_cached_g",
-                              "cos_cached_vs_honest_mean", "in_S_t",
+            dwriter.writerow(["round",
+                              "cohort_size",
+                              "sum_w_cohort",
+                              "avg_w_cohort",
+                              "avg_norm_cached_g",
+                              "avg_cos_cached_vs_honest_mean",
+                              "n_in_S_t",
                               "decay_factor_this_round"])
 
         with open(csv_path, "w", newline="") as fh:
@@ -484,28 +502,42 @@ class FedLAWV2Trainer:
                     # cfg.participation_mode — see config docstring.
                     mask = sampling_rng.random(cfg.n_clients) < cfg.p
                     S_t = np.where(mask)[0]
-                    # Dormancy attack override on S_t (§3).
+                    # Dormancy attack override on S_t (§3). Cohort-wide:
+                    # every dormant client is forced IN during build-trust and
+                    # OUT after T_dark.
                     if dormancy_on:
+                        S_t_set = set(int(i) for i in S_t)
                         if k < T_dark:
-                            if dormant not in set(int(i) for i in S_t):
-                                S_t = np.sort(np.append(S_t, dormant))
+                            missing = [d for d in dormant_cohort if d not in S_t_set]
+                            if missing:
+                                S_t = np.sort(np.concatenate(
+                                    [S_t, np.array(missing, dtype=S_t.dtype)]))
                         else:
-                            S_t = S_t[S_t != dormant]
-                    # Dormancy attack — poison the dormant client's Round-A
-                    # pseudo-gradient on the last build-trust round so the
-                    # poisoned value gets cached. Branch on payload:
+                            S_t = np.array([i for i in S_t if int(i) not in dormant_set],
+                                           dtype=S_t.dtype)
+                    # Dormancy attack — poison the dormant COHORT's Round-A
+                    # pseudo-gradient on the last build-trust round.
+                    # Coordination: compute a SINGLE poison vector over the
+                    # non-dormant honest clients and copy it into every
+                    # dormant slot so the cached gradients sum constructively
+                    # (contrast: the reproduction's group-oriented gradients
+                    # at f=0.4 partially cancelled).
                     if dormancy_on and k == T_dark - 1:
-                        other_hon = np.array(
-                            [i for i in range(cfg.n_clients) if i != dormant],
+                        non_dormant = np.array(
+                            [i for i in range(cfg.n_clients) if i not in dormant_set],
                             dtype=int)
                         if cfg.dormancy_payload == "inverse_mean":
-                            G[dormant] = -G[other_hon].mean(axis=0)
+                            poison_g = -G[non_dormant].mean(axis=0)
+                            for d in dormant_cohort:
+                                G[d] = poison_g
                         elif cfg.dormancy_payload == "stealth_lie":
-                            mu = G[other_hon].mean(axis=0)
-                            sigma = G[other_hon].std(axis=0, ddof=1)
-                            G[dormant] = mu + cfg.dormancy_lie_tau * sigma
+                            mu = G[non_dormant].mean(axis=0)
+                            sigma = G[non_dormant].std(axis=0, ddof=1)
+                            poison_g = mu + cfg.dormancy_lie_tau * sigma
+                            for d in dormant_cohort:
+                                G[d] = poison_g
                         elif cfg.dormancy_payload == "stealth_honest":
-                            pass  # leave G[dormant] as the client's honest g
+                            pass  # leave every dormant's honest g unchanged
                         else:
                             raise ValueError(
                                 f"Unknown dormancy_payload: "
@@ -627,18 +659,22 @@ class FedLAWV2Trainer:
                             G_tilde, _ = _clip_gradients(G_tilde, self.honest_indices)
 
                             # Dormancy Round-B poisoning — mirror Round-A's
-                            # payload choice so the cached G_tilde stays
-                            # internally consistent with the cached G.
+                            # cohort-wide coordination.
                             if dormancy_on and k == T_dark - 1:
-                                other_hon = np.array(
-                                    [i for i in range(cfg.n_clients) if i != dormant],
+                                non_dormant = np.array(
+                                    [i for i in range(cfg.n_clients)
+                                     if i not in dormant_set],
                                     dtype=int)
                                 if cfg.dormancy_payload == "inverse_mean":
-                                    G_tilde[dormant] = -G_tilde[other_hon].mean(axis=0)
+                                    poison_gt = -G_tilde[non_dormant].mean(axis=0)
+                                    for d in dormant_cohort:
+                                        G_tilde[d] = poison_gt
                                 elif cfg.dormancy_payload == "stealth_lie":
-                                    mu = G_tilde[other_hon].mean(axis=0)
-                                    sigma = G_tilde[other_hon].std(axis=0, ddof=1)
-                                    G_tilde[dormant] = mu + cfg.dormancy_lie_tau * sigma
+                                    mu = G_tilde[non_dormant].mean(axis=0)
+                                    sigma = G_tilde[non_dormant].std(axis=0, ddof=1)
+                                    poison_gt = mu + cfg.dormancy_lie_tau * sigma
+                                    for d in dormant_cohort:
+                                        G_tilde[d] = poison_gt
                                 elif cfg.dormancy_payload == "stealth_honest":
                                     pass
 
@@ -681,33 +717,43 @@ class FedLAWV2Trainer:
                 self._set_global_flat(theta_new)
                 weight_history.append(self.w.copy())
 
-                # ── Dormancy diagnostic (per round) ──────────────────────────
+                # ── Dormancy diagnostic (per round, cohort aggregate) ────────
                 if dormancy_on:
-                    in_S_t_now = bool(cfg.p >= 1.0 or (dormant in set(int(i) for i in S_t)))
-                    norm_cached = 0.0
-                    cos_cached = 0.0
+                    S_t_now = set(int(i) for i in S_t) if cfg.p < 1.0 else set(range(cfg.n_clients))
+                    n_in_St = sum(1 for d in dormant_cohort if d in S_t_now)
+                    cohort_ws = self.w[dormant_cohort]
+                    sum_w = float(cohort_ws.sum())
+                    avg_w = float(cohort_ws.mean()) if len(cohort_ws) > 0 else 0.0
+                    avg_norm = 0.0
+                    avg_cos = 0.0
                     decay_this = 1.0 - cfg.alpha * cfg.p if cfg.p < 1.0 else 1.0
                     if (cfg.participation_mode == "cache_grad_B_ii"
-                            and hasattr(self, "_G_cache") and self._G_cache is not None):
-                        cached_g = self._G_cache[dormant]
-                        norm_cached = float(np.linalg.norm(cached_g))
-                        # Honest consensus = mean of fresh G over honest active
-                        # this round. For dormant comparison we use the same G
-                        # collected at theta_k earlier in the iteration.
-                        if cfg.p < 1.0 and len(S_t) > 0:
-                            hon_active = np.array(
-                                [i for i in S_t if int(i) != dormant
-                                 and int(i) not in byz_set], dtype=int)
-                            if len(hon_active) > 0:
-                                hon_mean = G[hon_active].mean(axis=0)
-                                nm = float(np.linalg.norm(hon_mean))
-                                if norm_cached > 1e-12 and nm > 1e-12:
-                                    cos_cached = float(
-                                        np.dot(cached_g, hon_mean) / (norm_cached * nm))
-                    dwriter.writerow([k, f"{float(self.w[dormant]):.6f}",
-                                      f"{norm_cached:.6f}",
-                                      f"{cos_cached:+.6f}",
-                                      int(in_S_t_now),
+                            and hasattr(self, "_G_cache") and self._G_cache is not None
+                            and cfg.p < 1.0 and len(S_t) > 0):
+                        hon_active = np.array(
+                            [i for i in S_t if int(i) not in dormant_set
+                             and int(i) not in byz_set], dtype=int)
+                        if len(hon_active) > 0:
+                            hon_mean = G[hon_active].mean(axis=0)
+                            nm = float(np.linalg.norm(hon_mean))
+                            per_norms, per_cos = [], []
+                            for d in dormant_cohort:
+                                g = self._G_cache[d]
+                                ng = float(np.linalg.norm(g))
+                                per_norms.append(ng)
+                                if ng > 1e-12 and nm > 1e-12:
+                                    per_cos.append(float(np.dot(g, hon_mean) / (ng * nm)))
+                                else:
+                                    per_cos.append(0.0)
+                            avg_norm = float(np.mean(per_norms))
+                            avg_cos = float(np.mean(per_cos))
+                    dwriter.writerow([k,
+                                      len(dormant_cohort),
+                                      f"{sum_w:.6f}",
+                                      f"{avg_w:.6f}",
+                                      f"{avg_norm:.6f}",
+                                      f"{avg_cos:+.6f}",
+                                      n_in_St,
                                       f"{decay_this:.6f}"])
                     dfh.flush()
 
