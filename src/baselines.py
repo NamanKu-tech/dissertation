@@ -24,7 +24,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from byzfl import Client, Server
-from byzfl.aggregators.aggregators import Krum, TrMean, Median
+from byzfl.aggregators.aggregators import Krum, TrMean, Median, CenteredClipping
 import src.models   # registers mlp3_mnist
 from src.data_partition import cao_partition, select_malicious_indices
 from src.fedlaw_v2 import _MNIST_TFM   # reuse the transform
@@ -50,8 +50,10 @@ class BaselineConfig:
     results_dir: str = "./results/baselines"
 
     # Aggregator
-    aggregator: str = "krum"      # "krum" or "trmean"
-    aggregator_f: int = 20        # number of Byzantine to tolerate
+    aggregator: str = "krum"      # "krum" | "trmean" | "median" | "cclip"
+    aggregator_f: int = 20        # number of Byzantine to tolerate (trmean/krum)
+    cclip_tau: float = 100.0      # CCLIP clipping radius (Karimireddy 2021)
+    cclip_L: int = 1              # CCLIP inner iterations
 
     # Partial participation
     p: float = 1.0
@@ -116,6 +118,12 @@ class BaselineTrainer:
             self.agg = TrMean(f=cfg.aggregator_f)
         elif cfg.aggregator == "median":
             self.agg = Median()   # Median doesn't take f — always picks middle
+        elif cfg.aggregator == "cclip":
+            # CenteredClipping (Karimireddy et al. 2021) — the aggregator
+            # DeMoA's headline results (Figure 1) use. Init center m is
+            # updated STATEFULLY across rounds (previous round's aggregate
+            # becomes next round's initial center) — set in run().
+            self.agg = CenteredClipping(m=None, L=cfg.cclip_L, tau=cfg.cclip_tau)
         else:
             raise ValueError(f"Unknown aggregator: {cfg.aggregator!r}")
 
@@ -252,6 +260,11 @@ class BaselineTrainer:
                 # Robust aggregation (Krum returns 1D array; TrMean too).
                 # ByzFL expects list of 1D arrays.
                 agg = np.asarray(self.agg(combined), dtype=np.float64)
+                # Persist CCLIP's initial center = previous round's aggregate
+                # (Karimireddy 2021 canonical stateful usage). Without this,
+                # CCLIP resets to the zero vector each round and can't cluster.
+                if cfg.aggregator == "cclip":
+                    self.agg.m = agg.copy()
 
                 # Model update
                 theta_new = theta_k - cfg.alpha * agg
