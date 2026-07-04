@@ -25,6 +25,77 @@ from torch.utils.data import DataLoader
 
 from byzfl import Client, Server
 from byzfl.aggregators.aggregators import Krum, TrMean, Median, CenteredClipping
+
+
+class Bulyan:
+    """Bulyan (Mhamdi et al. 2018) — canonical implementation.
+
+    Algorithm:
+      1. Iterative Krum selection: repeatedly pick the vector with the
+         smallest Krum score (sum of squared distances to n-f-2 nearest
+         neighbours in the CURRENT remaining pool). Remove it, add to
+         selected set. Stop when |selected| = n - 2f.
+      2. Coordinate-wise "median-of-means": among the selected m = n-2f
+         vectors, per coordinate, keep the m − 2f closest to the median
+         and average them.
+
+    Requires n ≥ 4f + 3. Efficient impl: pre-compute the n×n pairwise
+    squared-distance matrix once per aggregation call.
+    """
+
+    def __init__(self, f: int = 0):
+        self.f = f
+
+    def __call__(self, vectors):
+        X = np.stack([np.asarray(v, dtype=np.float64) for v in vectors], axis=0)
+        n, d = X.shape
+        f = self.f
+        if n < 4 * f + 3:
+            raise ValueError(
+                f"Bulyan requires n ≥ 4f+3 (got n={n}, f={f}).")
+
+        # Pairwise squared distances (n, n) — dominant cost.
+        norms = (X * X).sum(axis=1)
+        # ||x_i - x_j||^2 = ||x_i||^2 + ||x_j||^2 - 2 x_i·x_j
+        gram = X @ X.T
+        dist = norms[:, None] + norms[None, :] - 2 * gram
+        np.fill_diagonal(dist, np.inf)   # exclude self from k-NN
+
+        # Iterative Krum selection.
+        m = n - 2 * f
+        selected = []
+        remaining = np.ones(n, dtype=bool)
+        # k for Krum score = current pool size − f − 2.
+        for _ in range(m):
+            pool_size = int(remaining.sum())
+            k = max(pool_size - f - 2, 1)
+            best_i = -1
+            best_score = np.inf
+            # For each remaining i, compute sum of k smallest distances to
+            # OTHER remaining j (excludes self by inf on diagonal).
+            for i in np.where(remaining)[0]:
+                d_row = dist[i, remaining].copy()
+                # d_row includes distance to i itself which is +inf, safe
+                d_row.partition(k - 1) if k <= len(d_row) else None
+                score = float(d_row[:k].sum())
+                if score < best_score:
+                    best_score = score
+                    best_i = int(i)
+            selected.append(best_i)
+            remaining[best_i] = False
+
+        # Coordinate-wise: among m selected vectors, per coord keep m − 2f
+        # closest to the median and average.
+        S = X[selected]                # (m, d)
+        med = np.median(S, axis=0)     # (d,)
+        keep = m - 2 * f
+        # Distance-to-median per (i, coord); pick keep smallest per coord.
+        # Use argpartition along axis=0.
+        dev = np.abs(S - med)          # (m, d)
+        # For each coord j: indices of the `keep` smallest deviations.
+        idx = np.argpartition(dev, keep - 1, axis=0)[:keep]   # (keep, d)
+        gathered = np.take_along_axis(S, idx, axis=0)         # (keep, d)
+        return gathered.mean(axis=0)
 import src.models   # registers mlp3_mnist
 from src.data_partition import cao_partition, select_malicious_indices
 from src.fedlaw_v2 import _MNIST_TFM   # reuse the transform
@@ -124,6 +195,12 @@ class BaselineTrainer:
             # updated STATEFULLY across rounds (previous round's aggregate
             # becomes next round's initial center) — set in run().
             self.agg = CenteredClipping(m=None, L=cfg.cclip_L, tau=cfg.cclip_tau)
+        elif cfg.aggregator == "bulyan":
+            # Bulyan (Mhamdi et al. 2018) — canonical selection + coord trim.
+            # Requires n ≥ 4f+3; at n=200 max f=49. We use max valid f
+            # against the c80 attack (Bulyan's theorem doesn't cover f≥50
+            # at n=200, which is itself a limitation to report).
+            self.agg = Bulyan(f=cfg.aggregator_f)
         else:
             raise ValueError(f"Unknown aggregator: {cfg.aggregator!r}")
 
