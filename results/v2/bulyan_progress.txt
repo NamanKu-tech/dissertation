@@ -1,0 +1,8 @@
+DeMoA + Bulyan batch started Sat Jul  4 16:49:20 IST 2026
+
+=== START: clean_Bulyan_DeMoA Sat Jul  4 16:49:20 IST 2026 ===
+DONE: clean_Bulyan_DeMoA → 200,0.888300,0.415542 Sat Jul  4 17:02:34 IST 2026
+
+=== START: dorm_Bulyan_DeMoA_c80_T20 Sat Jul  4 17:02:34 IST 2026 ===
+DONE: dorm_Bulyan_DeMoA_c80_T20 → 200,0.082400,2.410266 Sat Jul  4 17:12:14 IST 2026
+ALL 2 RUNS DONE Sat Jul  4 17:12:14 IST 2026
