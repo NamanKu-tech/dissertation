@@ -6,8 +6,9 @@ participation extension, (3) developing the coordinated dormancy attack,
 and (4) testing the attack against the full defender family (FedLAW's
 learnable-weights + DeMoA-cache with four aggregators).
 
-Written 2026-07-04 while the final Bulyan cell is running. Points to the
-authoritative artefacts in the repo (this doc is a map, not the sole record).
+Written 2026-07-04. All baseline cells complete including Bulyan.
+Points to the authoritative artefacts in the repo (this doc is a map,
+not the sole record).
 
 ---
 
@@ -27,14 +28,12 @@ characterized accuracy gaps, each with mechanism identified:
 **Partial-participation contribution (Phase 2):** Bernoulli-p sampling
 harness passes sanity gate (90.61% at p=1.0). Design ladder A→B(i)→B(ii)
 implemented and validated. Coordinated cohort dormancy attack lands on
-FedLAW cache_grad_B_ii for −9.97pp. Attack is **general across all
-caching-based defenders tested**: FedLAW, DeMoA+TrMean(f=20/80),
-DeMoA+Median, DeMoA+CCLIP(τ=20/50/100). Bulyan test in progress at
-time of writing; theorem-limit already established (Bulyan's n≥4f+3
-requirement excludes 40% Byzantine at n=200).
-
-**No sweep run yet.** The framing must be confirmed by the Bulyan
-result before the systematic multi-seed sweep can be committed to.
+FedLAW cache_grad_B_ii for −9.97pp. Attack is **general across every
+caching-based defender tested**: FedLAW, DeMoA+TrMean(f=20/80),
+DeMoA+Median, DeMoA+CCLIP(τ=20/50/100), and DeMoA+Bulyan(f=49) which
+**catastrophically collapses to chance (8.24% = −80.59pp)**. The
+framing "general threat across every standard aggregator" is now fully
+earned. Multi-seed sweep unlocked.
 
 ---
 
@@ -315,8 +314,22 @@ frac=0.0 background, coordinated stealth_lie cohort_80, T_dark=20,
 | DeMoA + TrMean(f=20) | 89.72% | 78.14% | −11.58pp | LANDS |
 | DeMoA + TrMean(f=80, matched) | 89.03% | 63.97% | −25.06pp | LANDS |
 | DeMoA + Median | 88.98% | 60.03% | −28.95pp | LANDS |
-| DeMoA + Bulyan(f=49) | (running) | (running) | — | **pending** |
+| DeMoA + Bulyan(f=49) | 88.83% | **8.24%** | **−80.59pp** | **CATASTROPHIC** |
 | DeMoA + Krum | — | — | — | not viable (unstable on q=0.9) |
+
+**Bulyan collapse mechanism:** Bulyan's iterative Krum step selects
+102 candidates whose Krum score is lowest. 80 identical dormants have
+Krum score dominated by 79 zero-distance mutual "neighbours" — they
+uniformly win the selection over spread honest clients. Bulyan step 2
+(coordinate-wise median-of-means, keep middle 4 of 102 per coordinate):
+with 78% of the selected pool identical, all 4 middle values per
+coordinate ARE the dormants. Aggregator output = 100% poison direction
+every round from T_dark onward. Model trains normally through
+build-trust (47.8% at round 20) then monotonically collapses.
+
+Bulyan's anti-clustering filter (needed to defend against SPREAD
+Byzantines) becomes the ATTACKER'S ally when the attackers are TIGHT.
+The protective mechanism inverts under coordinated identical payload.
 
 ### 2.9 Framing corrections along the way — accountability
 
@@ -340,7 +353,10 @@ next test rather than proceeding on assumption.
 6. **CCLIP is DeMoA's PRIMARY aggregator** — test it before claiming
    "general threat". Tested at τ ∈ {20,50,100}; falls uniformly.
 7. **Bulyan is the anti-clustering aggregator** most likely to resist.
-   Currently testing.
+   Tested at max valid f=49 (n≥4f+3 requirement) — catastrophic collapse
+   to chance (−80.59pp), the WORST of any defender. Bulyan's selection
+   step actively prefers the tight dormant cluster; its coord-wise
+   filter then trims the honest spread away. Framing fully earned.
 
 ### 2.10 Mechanism summary — why the attack lands
 
@@ -361,6 +377,9 @@ compounding properties**:
   - **CCLIP:** 80 identical vectors have identical ‖v−m‖, so all clip
     by the same factor; direction of 40% input dominates the mean
     regardless of τ.
+  - **Bulyan:** iterative Krum PREFERS tight clusters (79 zero-distance
+    self-neighbours dominate the score). Selects the cohort, then trims
+    honest spread. Filter mechanism INVERTS — catastrophic collapse.
 
 The reproduction phase's flipping_label f=0.4 finding (67% cancellation
 because 4 groups had 4 different poisons) is exactly what dormancy
@@ -426,13 +445,11 @@ avoids by construction: one coordinated poison, zero cancellation.
 
 ## 4. What's open
 
-### Immediate (blocking framing)
-- **Bulyan test** (running at time of writing). Result gates whether
-  the "general threat across every standard aggregator" claim is
-  earned or whether one aggregator (Bulyan's anti-clustering selection)
-  resists.
+### Immediate (framing now confirmed)
+- ~~Bulyan test~~ — COMPLETE (catastrophic collapse; framing fully
+  earned). Multi-seed sweep unlocked.
 
-### Prompt 2 (systematic sweep, gated on Bulyan)
+### Prompt 2 (systematic sweep)
 Once framing is confirmed:
 - Multi-seed {0,1,2} across all cells
 - Cohort size sweep (cohort ∈ {20, 40, 60, 80}) at p=0.5 f=0.4
@@ -449,6 +466,13 @@ Candidate mechanisms:
 - Cohort-size-scaled staleness eviction (aggregate cache mass bounded
   globally, not just per-client)
 - Anti-clustering post-cache filter before aggregation
+- **CRITICAL constraint from Bulyan finding:** stronger anti-clustering
+  at the AGGREGATION step (Bulyan-style) INVERTS to worse damage under
+  coordinated attacks. Design C must attack coordination at the
+  ADMISSION step (which clients enter the aggregator) rather than at
+  the aggregation step. The signal to key on is "identical-across-
+  many-absent-clients" (which is what coordination looks like),
+  detectable at the cache level before aggregation.
 
 ### Reproduction items still open
 - Multi-seed at n=200 for reproduction cells (all currently seed=0)
@@ -504,11 +528,14 @@ Candidate mechanisms:
    full-strength update and wins at f=0.4 by 5pp over naive-A.
 7. The coordinated stealth cohort dormancy attack (novel construction,
    grounded in DeMoA §3's "future work: dedicated attacks against the
-   delayed momentum principle") defeats all standard caching-based
-   Byzantine-resilient FL defenders under partial participation:
-   FedLAW's cross-product detector, DeMoA with TrMean / Median /
-   CenteredClipping. Bulyan test in progress; expected outside its
-   theorem's design range and unlikely to resist at 40% Byzantine.
+   delayed momentum principle") defeats EVERY standard caching-based
+   Byzantine-resilient FL defender tested under partial participation:
+   FedLAW's cross-product detector (−9.97pp), DeMoA + TrMean (−11.58
+   to −25.06pp depending on f), DeMoA + Median (−28.95pp), DeMoA +
+   CenteredClipping (DeMoA's paper's primary aggregator, tested at
+   τ ∈ {20,50,100}, −8.85 to −9.08pp), and DeMoA + Bulyan (Mhamdi's
+   anti-clustering aggregator, catastrophic collapse to 8.24% = chance
+   level, −80.59pp).
 8. The attack mechanism is unified across defender families: caching
    preserves cohort influence; coordination (identical cached values)
    defeats each aggregator's specific detection primitive via
@@ -519,9 +546,10 @@ corrections along the way):
 - Not "the paper is wrong" — the reproduction gaps are characterized
   behaviours, not paper errors.
 - Not "1:1 paper reproduction" — three specific cells don't match.
-- Not "DeMoA falls in general" — it falls under specific practical
-  aggregator instantiations tested here; Bulyan and Krum (unstable)
-  aren't in the covered set until the current batch lands.
+- ~~Not "DeMoA falls in general"~~ — SUPERSEDED: Bulyan now tested and
+  falls catastrophically; Krum unstable regardless. The claim "DeMoA
+  under partial participation with coordinated cohort dormancy defeats
+  every standard robust aggregator we tested" is EARNED.
 - Not "coordinated dormancy is a completely new attack" — the category
   (time-coupled / on-off / ALIE-family) is prior art; the contribution
   is novel BY CONSTRUCTION targeting caching-based Byzantine-resilient
