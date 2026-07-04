@@ -1,0 +1,14 @@
+Bulyan verify batch started Sat Jul  4 21:58:42 IST 2026
+
+=== START: dorm_Bulyan_DeMoA_c80_T20_HONEST Sat Jul  4 21:58:42 IST 2026 ===
+DONE: dorm_Bulyan_DeMoA_c80_T20_HONEST → 200,0.857900,0.481287 Sat Jul  4 22:15:03 IST 2026
+
+=== START: dorm_Bulyan_DeMoA_c80_T20_seed1 Sat Jul  4 22:15:03 IST 2026 ===
+DONE: dorm_Bulyan_DeMoA_c80_T20_seed1 → 200,0.176100,4.608078 Sat Jul  4 22:24:16 IST 2026
+
+=== START: dorm_Bulyan_DeMoA_c80_T20_seed2 Sat Jul  4 22:24:16 IST 2026 ===
+DONE: dorm_Bulyan_DeMoA_c80_T20_seed2 → 200,0.125200,2.597794 Sat Jul  4 22:34:34 IST 2026
+DONE: clean_Bulyan_DeMoA_seed1 → 200,0.889100,0.409589 Sat Jul  4 22:49:13 IST 2026
+DONE: clean_Bulyan_DeMoA_seed2 → 200,0.879400,0.432928 Sat Jul  4 23:05:41 IST 2026
+
+ALL 5 RUNS DONE Sat Jul  4 23:05:41 IST 2026

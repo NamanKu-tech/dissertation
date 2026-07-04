@@ -101,6 +101,12 @@ class FedLAWV2Config:
     # the reproduction's group-oriented Byzantine gradients did at f=0.4).
     # If non-empty, this overrides dormancy_client_idx.
     dormancy_client_indices: list = field(default_factory=list)
+    # Coordinated-present control: cohort force-included every round AND
+    # poisoned every round (ignores T_dark). Used to disambiguate whether a
+    # defender's collapse is dormancy-specific (needs build-trust + cache)
+    # or coordination-specific (identical vectors defeat the aggregator's
+    # selection/trimming without any dormancy mechanic).
+    coordinated_present: bool = False
     # Dormancy payload — what gets cached at round T_dark − 1.
     #   "inverse_mean" — −mean(other_honest). Anti-aligned (cos ≈ −0.99);
     #                     trivially caught by re-scoring. Use as control.
@@ -444,7 +450,7 @@ class FedLAWV2Trainer:
         else:
             dormant_cohort = []
         dormant_set = set(dormant_cohort)
-        dormancy_on = len(dormant_cohort) > 0 and T_dark > 0
+        dormancy_on = len(dormant_cohort) > 0 and (T_dark > 0 or cfg.coordinated_present)
         if dormancy_on:
             dormancy_csv = os.path.join(cfg.results_dir, "dormancy_diag.csv")
             dfh = open(dormancy_csv, "w", newline="")
@@ -507,7 +513,9 @@ class FedLAWV2Trainer:
                     # OUT after T_dark.
                     if dormancy_on:
                         S_t_set = set(int(i) for i in S_t)
-                        if k < T_dark:
+                        # coordinated_present: cohort always included (no dark phase).
+                        # dormancy: force IN during build-trust, force OUT after.
+                        if cfg.coordinated_present or k < T_dark:
                             missing = [d for d in dormant_cohort if d not in S_t_set]
                             if missing:
                                 S_t = np.sort(np.concatenate(
