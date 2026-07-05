@@ -1,0 +1,18 @@
+δ-check batch started Sat Jul  4 23:08:31 IST 2026. c40 (20% Byzantine).
+
+=== START: clean_TrMean_DeMoA_f40 Sat Jul  4 23:08:31 IST 2026 ===
+DONE: clean_TrMean_DeMoA_f40 → 200,0.894100,0.390167 Sat Jul  4 23:25:36 IST 2026
+
+=== START: dorm_FedLAW_c40_T20 Sat Jul  4 23:25:36 IST 2026 ===
+DONE: dorm_FedLAW_c40_T20 → 200,0.877700,0.395645,0.000000 Sat Jul  4 23:53:27 IST 2026
+
+=== START: dorm_TrMean_DeMoA_f40_c40_T20 Sat Jul  4 23:53:27 IST 2026 ===
+DONE: dorm_TrMean_DeMoA_f40_c40_T20 → 200,0.863200,0.511165 Sun Jul  5 00:04:56 IST 2026
+
+=== START: dorm_CCLIP_DeMoA_c40_T20 Sun Jul  5 00:04:56 IST 2026 ===
+DONE: dorm_CCLIP_DeMoA_c40_T20 → 200,0.880100,0.381457 Sun Jul  5 00:15:12 IST 2026
+
+=== START: dorm_Bulyan_DeMoA_c40_T20 Sun Jul  5 00:15:12 IST 2026 ===
+DONE: dorm_Bulyan_DeMoA_c40_T20 → 200,0.596300,1.248290 Sun Jul  5 00:26:59 IST 2026
+
+ALL 5 RUNS DONE Sun Jul  5 00:26:59 IST 2026

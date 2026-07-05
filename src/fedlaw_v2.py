@@ -488,10 +488,40 @@ class FedLAWV2Trainer:
 
                 if cfg.p >= 1.0:
                     # ── Fast path: full participation (byte-exact baseline) ──
+                    # coord-present injects coordinated poison every round
+                    # (Control 3: does the attack need partial participation?).
+                    if dormancy_on and cfg.coordinated_present:
+                        non_dormant = np.array(
+                            [i for i in range(cfg.n_clients) if i not in dormant_set],
+                            dtype=int)
+                        if cfg.dormancy_payload == "stealth_lie":
+                            mu = G[non_dormant].mean(axis=0)
+                            sigma = G[non_dormant].std(axis=0, ddof=1)
+                            poison_g = mu + cfg.dormancy_lie_tau * sigma
+                            for d in dormant_cohort:
+                                G[d] = poison_g
+                        elif cfg.dormancy_payload == "inverse_mean":
+                            poison_g = -G[non_dormant].mean(axis=0)
+                            for d in dormant_cohort:
+                                G[d] = poison_g
+
                     if k < cfg.w_freeze_rounds:
                         theta_tilde = theta_k - cfg.alpha * (G.T @ self.w)
                         G_tilde, f_tilde = self._collect(theta_tilde, round_k=k)
                         G_tilde, _ = _clip_gradients(G_tilde, self.honest_indices)
+
+                        # coord-present G_tilde poisoning at p=1.0
+                        if dormancy_on and cfg.coordinated_present:
+                            if cfg.dormancy_payload == "stealth_lie":
+                                mu = G_tilde[non_dormant].mean(axis=0)
+                                sigma = G_tilde[non_dormant].std(axis=0, ddof=1)
+                                poison_gt = mu + cfg.dormancy_lie_tau * sigma
+                                for d in dormant_cohort:
+                                    G_tilde[d] = poison_gt
+                            elif cfg.dormancy_payload == "inverse_mean":
+                                poison_gt = -G_tilde[non_dormant].mean(axis=0)
+                                for d in dormant_cohort:
+                                    G_tilde[d] = poison_gt
 
                         cross = G @ G_tilde.T
                         h = (self.w
@@ -530,7 +560,10 @@ class FedLAWV2Trainer:
                     # dormant slot so the cached gradients sum constructively
                     # (contrast: the reproduction's group-oriented gradients
                     # at f=0.4 partially cancelled).
-                    if dormancy_on and k == T_dark - 1:
+                    # Poison Round-A gradient:
+                    #   coordinated_present: every round
+                    #   dormancy: only at T_dark - 1 (cached, persists after dark)
+                    if dormancy_on and (cfg.coordinated_present or k == T_dark - 1):
                         non_dormant = np.array(
                             [i for i in range(cfg.n_clients) if i not in dormant_set],
                             dtype=int)
