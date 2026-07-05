@@ -1,0 +1,46 @@
+Controls batch started Sun Jul  5 03:31:40 IST 2026
+Multi-seed {0,1,2} on essential cells.
+
+=== START: fedlaw_c80_T20_HONEST_seed0 Sun Jul  5 03:31:40 IST 2026 ===
+DONE: fedlaw_c80_T20_HONEST_seed0 → 200,0.877900,0.452997,0.000000 Sun Jul  5 03:58:19 IST 2026
+
+=== START: fedlaw_c80_T20_HONEST_seed1 Sun Jul  5 03:58:19 IST 2026 ===
+DONE: fedlaw_c80_T20_HONEST_seed1 → 200,0.887700,0.407313,0.000000 Sun Jul  5 04:26:34 IST 2026
+
+=== START: fedlaw_c80_T20_HONEST_seed2 Sun Jul  5 04:26:34 IST 2026 ===
+DONE: fedlaw_c80_T20_HONEST_seed2 → 200,0.880900,0.422057,0.000000 Sun Jul  5 04:54:26 IST 2026
+
+=== START: fedlaw_c80_coord_present_p05_seed0 Sun Jul  5 04:54:26 IST 2026 ===
+DONE: fedlaw_c80_coord_present_p05_seed0 → 200,0.812400,0.630267,0.000000 Sun Jul  5 05:22:29 IST 2026
+
+=== START: fedlaw_c80_coord_present_p05_seed1 Sun Jul  5 05:22:29 IST 2026 ===
+DONE: fedlaw_c80_coord_present_p05_seed1 → 200,0.834200,0.594530,0.000000 Sun Jul  5 05:51:06 IST 2026
+
+=== START: fedlaw_c80_coord_present_p05_seed2 Sun Jul  5 05:51:06 IST 2026 ===
+DONE: fedlaw_c80_coord_present_p05_seed2 → 200,0.797000,0.654593,0.000000 Sun Jul  5 06:18:43 IST 2026
+
+=== START: fedlaw_c80_coord_present_p10_seed0 Sun Jul  5 06:18:43 IST 2026 ===
+DONE: fedlaw_c80_coord_present_p10_seed0 → 200,0.792700,0.705014,0.000000 Sun Jul  5 06:46:06 IST 2026
+
+=== START: fedlaw_c80_coord_present_p10_seed1 Sun Jul  5 06:46:06 IST 2026 ===
+DONE: fedlaw_c80_coord_present_p10_seed1 → 200,0.824300,0.648836,0.000000 Sun Jul  5 07:14:18 IST 2026
+
+=== START: fedlaw_c80_coord_present_p10_seed2 Sun Jul  5 07:14:18 IST 2026 ===
+DONE: fedlaw_c80_coord_present_p10_seed2 → 200,0.790900,0.712284,0.000000 Sun Jul  5 07:43:16 IST 2026
+
+=== START: fedlaw_c80_T20_q06_seed0 Sun Jul  5 07:43:16 IST 2026 ===
+DONE: fedlaw_c80_T20_q06_seed0 → 200,0.906500,0.309253,0.000000 Sun Jul  5 08:12:18 IST 2026
+
+=== START: fedlaw_c80_T20_q06_seed1 Sun Jul  5 08:12:18 IST 2026 ===
+DONE: fedlaw_c80_T20_q06_seed1 → 200,0.904800,0.308595,0.000000 Sun Jul  5 08:41:21 IST 2026
+
+=== START: fedlaw_c80_T20_q06_seed2 Sun Jul  5 08:41:21 IST 2026 ===
+DONE: fedlaw_c80_T20_q06_seed2 → 200,0.904700,0.314104,0.000000 Sun Jul  5 09:09:42 IST 2026
+
+=== START: fedlaw_c80_T20_stealth_seed1 Sun Jul  5 09:09:42 IST 2026 ===
+DONE: fedlaw_c80_T20_stealth_seed1 → 200,0.809000,0.594040,0.000000 Sun Jul  5 09:38:03 IST 2026
+
+=== START: fedlaw_c80_T20_stealth_seed2 Sun Jul  5 09:38:03 IST 2026 ===
+DONE: fedlaw_c80_T20_stealth_seed2 → 200,0.784300,0.635063,0.000000 Sun Jul  5 10:06:12 IST 2026
+
+ALL RUNS DONE Sun Jul  5 10:06:12 IST 2026
